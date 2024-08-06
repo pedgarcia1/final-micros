@@ -12,7 +12,6 @@
  ******************************************************************************/
 #include "74hc595.h"
 #include "board.h"
-#include <msp430g2553.h>
 
 /*******************************************************************************
  * CONSTANT AND MACRO DEFINITIONS USING #DEFINE
@@ -30,11 +29,19 @@
  * FUNCTION PROTOTYPES FOR PRIVATE FUNCTIONS WITH FILE LEVEL SCOPE
  ******************************************************************************/
 
+/**
+ * @brief:
+*/
 void shiftRegisterClock();
 
+/**
+ * Get a single bit from a byte.
+ *
+ * @param b A byte.
+ * @param pos The bit position to be extracted.
+ * @return A bit.
+ */
 unsigned int get_byte(char b, unsigned int pos);
-
-void bit_to_pin(char c, unsigned int pos, volatile unsigned char *port, unsigned int pin);
 
 /*******************************************************************************
  * ROM CONST VARIABLES WITH FILE LEVEL SCOPE
@@ -74,7 +81,12 @@ void shiftRegisterWrite(unsigned char value)
 	unsigned int i;
 	for (i = 0; i < 8; i++) {
 		// Shift every bit.
-		bit_to_pin(value, i, &P1OUT, DATA);
+		// bit_to_pin(value, i, &P1OUT, DATA);
+		if (get_byte(value, i)) {
+                gpioWrite(DATA, HIGH);
+		    } else {
+                gpioWrite(DATA, LOW);
+		    }
 		shiftRegisterClock();
 	}
 
@@ -90,7 +102,7 @@ void shiftRegisterWrite(unsigned char value)
  ******************************************************************************/
 
 /**
- * @brief: Init. SR 74HC595
+ * @brief:
 */
 void shiftRegisterClock() {
     // Set pins as output
@@ -108,20 +120,4 @@ void shiftRegisterClock() {
  */
 unsigned int get_byte(char b, unsigned int pos) {
 	return (b & (1 << pos));
-}
-
-/**
- * Puts the desired bit into a pin. It's used to get the bits in a char
- * to send to the LCD.
- *
- * @param c The character.
- * @param pos Bit position.
- * @param pin The pin to be set.
- */
-void bit_to_pin(char c, unsigned int pos, volatile unsigned char *port, unsigned int pin) {
-	if (get_byte(c, pos)) {
-		*port |= pin;
-	} else {
-		*port &= ~pin;
-	}
 }
