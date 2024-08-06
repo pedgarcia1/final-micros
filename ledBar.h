@@ -7,12 +7,14 @@
   @author Pedro Garcia Delucis
  ******************************************************************************/
 
-#ifndef SR_74HC595_H
-#define SR_74HC595_H
+#ifndef LED_BAR_H
+#define LED_BAR_H
 
 /*******************************************************************************
  * INCLUDE HEADER FILES
  ******************************************************************************/
+
+#include "74hc595.h"
 
 /*******************************************************************************
  * CONSTANT AND MACRO DEFINITIONS USING #DEFINE
@@ -31,18 +33,18 @@
  ******************************************************************************/
 
 /**
- * @brief: Initializes 74HC595 shift register
+ * @brief: Initializes Led Bar Display
 */
-void shiftRegisterInit();
+void ledBarInit();
 
 /**
  * @brief: Sends multiple bytes of data
  * @param value: Number of bytes to be sent
 */
-void shiftRegisterWrite(unsigned char value);
+void updateLedBar(unsigned int level);
 
 /*******************************************************************************
  ******************************************************************************/
 
-#endif // SR_74HC595_H
+#endif // LED_BAR_H
 
