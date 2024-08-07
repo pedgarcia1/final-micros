@@ -13,15 +13,13 @@
 #include "i2c_msp430.h"
 #include <msp430.h>
 
+
 /*******************************************************************************
  * CONSTANT AND MACRO DEFINITIONS USING #DEFINE
  ******************************************************************************/
 #define I2C_SCL_PIN BIT6
 #define I2C_SDA_PIN BIT7
-#define TRANSMIT True
-#define RECEIVE False
-#define WRITE 0
-#define READ 1
+
 
 /*******************************************************************************
  * ENUMERATIONS AND STRUCTURES AND TYPEDEFS
@@ -43,19 +41,19 @@ void i2c_start(bool action);
 /**
  * @brief: Sends a stop condition
 */
-void i2c_stop();
+void i2c_stop(bool action);
 
 /**
  * @brief: Sends a byte of data
  * @param data: Data to be sent
 */
-void i2c_writeByte(uint8_t data)
+void i2c_writeByte(uint8_t data);
 
 /**
  * @brief: Reads a byte of data
  * @return: Data read
 */
-uint8_t i2c_writeByte(void)
+uint8_t i2c_readByte(void);
 
 /*******************************************************************************
  * ROM CONST VARIABLES WITH FILE LEVEL SCOPE
@@ -93,8 +91,8 @@ void i2c_init() {
 // I2C write data function
 void i2c_writeData(uint8_t* data, uint8_t length) {
     i2c_start(TRANSMIT);                        // Generate start condition
-    
-    for (uint8_t i = 0; i < length; i++) {
+    uint8_t i;
+    for (i = 0; i < length; i++) {
         i2c_writeByte(data[i]);                 // Send data byte
     }
     i2c_stop(TRANSMIT);                         // Generate stop condition
@@ -104,9 +102,8 @@ void i2c_writeData(uint8_t* data, uint8_t length) {
 void i2c_readData(uint8_t* data, uint8_t length) {
     i2c_start(RECEIVE);                     // Generate start condition
 
-    i2c_start();                            // Generate repeated start condition
-
-    for (uint8_t i = 0; i < length - 1; i++) {
+    uint8_t i;
+    for (i = 0; i < length - 1; i++) {
         data[i] = i2c_readByte();           // Read data byte
     }
     data[length - 1] = i2c_readByte();      // Read last data byte

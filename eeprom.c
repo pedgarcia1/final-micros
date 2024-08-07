@@ -16,7 +16,7 @@
 /*******************************************************************************
  * INCLUDE HEADER FILES
  ******************************************************************************/
-#include "I2C_MSP430.h"
+#include "i2c_msp430.h"
 #include "eeprom.h"
 
 
@@ -52,8 +52,8 @@
  ******************************************************************************/
 
 void EEPROM_init() {
-    I2C_init();
-    I2C_switchSlave(EEPROM_SLAVE_ADDR);
+    i2c_init();
+    i2c_switchSlave(EEPROM_SLAVE_ADDR);
 }
 
 // EEPROM write byte function
@@ -62,7 +62,7 @@ void EEPROM_writeData(uint16_t address, uint8_t* data, uint8_t length) {
     uint8_t addrLow = address & 0xFF;
 
     uint8_t writeData[3] = {addrHigh, addrLow, data};
-    I2C_writeData(EEPROM_SLAVE_ADDR, 0x00, writeData, 3);
+    i2c_writeData(EEPROM_SLAVE_ADDR, 0x00, writeData, 3);
 
     // Wait for write cycle to complete
     __delay_cycles(10000);
@@ -74,9 +74,9 @@ uint8_t EEPROM_readData(uint16_t address, uint8_t* data, uint8_t length) {
     uint8_t addrLow = address & 0xFF;
 
     uint8_t readData;
-    I2C_writeData(EEPROM_SLAVE_ADDR, 0x00, &addrHigh, 1);
-    I2C_writeData(EEPROM_SLAVE_ADDR, 0x00, &addrLow, 1);
-    I2C_readData(EEPROM_SLAVE_ADDR, 0x00, &readData, 1);
+    i2c_writeData(EEPROM_SLAVE_ADDR, 0x00, &addrHigh, 1);
+    i2c_writeData(EEPROM_SLAVE_ADDR, 0x00, &addrLow, 1);
+    i2c_readData(EEPROM_SLAVE_ADDR, 0x00, &readData, 1);
 
     return readData;
 }
