@@ -1,0 +1,5 @@
+{
+    "files.associations": {
+        "i2c_msp430.h": "c"
+    }
+}

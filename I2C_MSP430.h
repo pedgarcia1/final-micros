@@ -34,27 +34,27 @@
 /**
  * @brief: Initializes I2C communication
 */
-void I2C_init();
+void i2c_init();
 
 /**
  * @brief: Sends multiple bytes of data
  * @param data: Pointer to data to be sent
  * @param length: Number of bytes to be sent
 */
-void I2C_writeData(uint8_t* data, uint8_t length);
+void i2c_writeData(uint8_t* data, uint8_t length);
 
 /**
  * @brief: Reads multiple bytes of data
  * @param data: Pointer to data to be read
  * @param length: Number of bytes to be read
 */
-void I2C_readData(uint8_t* data, uint8_t length);
+void i2c_readData(uint8_t* data, uint8_t length);
 
 /**
  * @brief: Switches the I2C slave address
  * @param slaveAddr: New slave address
 */
-void I2C_switchSlave(uint8_t slaveAddr);
+void i2c_switchSlave(uint8_t slaveAddr);
 /*******************************************************************************
  ******************************************************************************/
 

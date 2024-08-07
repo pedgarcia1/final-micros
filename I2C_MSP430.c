@@ -10,7 +10,7 @@
 /*******************************************************************************
  * INCLUDE HEADER FILES
  ******************************************************************************/
-#include "I2C_MSP430.h"
+#include "i2c_msp430.h"
 #include <msp430.h>
 
 /*******************************************************************************
@@ -38,24 +38,24 @@
  * @brief: Sends a start condition
  * @param action: True if master is transmitting, False if master is receiving
 */
-void I2C_start(bool action);
+void i2c_start(bool action);
 
 /**
  * @brief: Sends a stop condition
 */
-void I2C_stop();
+void i2c_stop();
 
 /**
  * @brief: Sends a byte of data
  * @param data: Data to be sent
 */
-void I2C_writeByte(uint8_t data)
+void i2c_writeByte(uint8_t data)
 
 /**
  * @brief: Reads a byte of data
  * @return: Data read
 */
-uint8_t I2C_writeByte(void)
+uint8_t i2c_writeByte(void)
 
 /*******************************************************************************
  * ROM CONST VARIABLES WITH FILE LEVEL SCOPE
@@ -72,7 +72,7 @@ uint8_t I2C_writeByte(void)
  ******************************************************************************/
 
 // I2C initialization function
-void I2C_init() {
+void i2c_init() {
     // Configure I2C pins
     P1SEL   |= I2C_SCL_PIN + I2C_SDA_PIN;     // Select I2C function for these pins
     P1SEL2  |= I2C_SCL_PIN + I2C_SDA_PIN;    
@@ -91,29 +91,29 @@ void I2C_init() {
 }
 
 // I2C write data function
-void I2C_writeData(uint8_t slaveAddr, uint8_t* data, uint8_t length) {
-    I2C_start(TRANSMIT);                        // Generate start condition
+void i2c_writeData(uint8_t* data, uint8_t length) {
+    i2c_start(TRANSMIT);                        // Generate start condition
     
     for (uint8_t i = 0; i < length; i++) {
-        I2C_writeByte(data[i]);                 // Send data byte
+        i2c_writeByte(data[i]);                 // Send data byte
     }
-    I2C_stop(TRANSMIT);                         // Generate stop condition
+    i2c_stop(TRANSMIT);                         // Generate stop condition
 }
 
 // I2C read data function
-void I2C_readData(uint8_t slaveAddr, uint8_t* data, uint8_t length) {
-    I2C_start(RECEIVE);                     // Generate start condition
+void i2c_readData(uint8_t* data, uint8_t length) {
+    i2c_start(RECEIVE);                     // Generate start condition
 
-    I2C_start();                            // Generate repeated start condition
-    I2C_writeByte((slaveAddr << 1) | 0x01); // Send slave address with read bit
+    i2c_start();                            // Generate repeated start condition
+
     for (uint8_t i = 0; i < length - 1; i++) {
-        data[i] = I2C_readByte();           // Read data byte
+        data[i] = i2c_readByte();           // Read data byte
     }
-    data[length - 1] = I2C_readByte();      // Read last data byte
-    I2C_stop(RECEIVE);                      // Generate stop condition
+    data[length - 1] = i2c_readByte();      // Read last data byte
+    i2c_stop(RECEIVE);                      // Generate stop condition
 }
 
-void I2C_switchSlave(uint8_t slaveAddr) {
+void i2c_switchSlave(uint8_t slaveAddr) {
     UCB0I2CSA = slaveAddr;                  // Set slave address
 }
 
@@ -124,7 +124,7 @@ void I2C_switchSlave(uint8_t slaveAddr) {
  ******************************************************************************/
 
 // I2C start condition function
-void I2C_start(bool action) {
+void i2c_start(bool action) {
     if (action) {
         UCB0CTL1 |= UCTR;           // Set as transmitter
     } else {
@@ -135,7 +135,7 @@ void I2C_start(bool action) {
 }
 
 // I2C stop condition function
-void I2C_stop(bool action) {
+void i2c_stop(bool action) {
     //NACK if RECEIVING
     if (!action) {
         UCB0CTL1 |= UCTXNACK;       // Generate NACK condition
@@ -146,13 +146,13 @@ void I2C_stop(bool action) {
 }
 
 // I2C write byte function
-void I2C_writeByte(uint8_t data) {
+void i2c_writeByte(uint8_t data) {
     UCB0TXBUF = data;               // Load data into transmit buffer
     while (!(IFG2 & UCB0TXIFG));    // Wait for transmit buffer to be empty
 }
 
 // I2C read byte function
-uint8_t I2C_readByte() {
+uint8_t i2c_readByte() {
     while (!(IFG2 & UCB0RXIFG));    // Wait for receive buffer to be full
     return UCB0RXBUF;               // Return received data
 }
