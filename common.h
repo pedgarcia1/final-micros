@@ -1,34 +1,60 @@
 /***************************************************************************//**
-  @file     hardware.h
-  @brief    Hardware, system and MCU registers management
-  @author   Grupo 5
+  @file     common.h
+  @brief    Common types, definitions and macros
+  @author   Nicolás Magliola
  ******************************************************************************/
 
-#ifndef _HARDWARE_H_
-#define _HARDWARE_H_
+#ifndef _COMMON_H_
+#define _COMMON_H_
 
 /*******************************************************************************
  * INCLUDE HEADER FILES
  ******************************************************************************/
 
-#include "common.h"
-#include "msp430.h"
+#include <stdint.h>
+#include <stdbool.h>
 
 
 /*******************************************************************************
  * CONSTANT AND MACRO DEFINITIONS USING #DEFINE
  ******************************************************************************/
 
-/***** SYSTEM defines *********************************************************/
+//*** common constants **********************
 
-#define DCOCLK_FREQ_HZ          1000000UL // 8MHz
-#define MCLK_PRESCALER_2POW     0
-#define SMCLK_PRESCALER_2POW    0
-#define MCLK_FREQ_HZ            (DCOCLK_FREQ_HZ/(1UL<<MCLK_PRESCALER_2POW)) // 8MHz
-#define SMCLK_FREQ_HZ           (DCOCLK_FREQ_HZ/(1UL<<SMCLK_PRESCALER_2POW)) // 8MHz
+#define MICROSECONDS_IN_MILISECOND  1000UL
+#define MILISECONDS_IN_SECOND       1000UL
+#define SECONDS_IN_MINUTE           60UL
+#define MINUTES_IN_HOUR             60UL
 
-#define enable_interrupts()     _BIS_SR(GIE)
-#define disable_interrupts()    _BIC_SR(GIE)
+#define BITS_IN_BYTE    8
+
+#define FALSE           0
+#define TRUE            1
+
+#ifndef NULL
+#define NULL            ((void*)0)
+#endif // NULL
+
+
+//*** util macros **********************
+
+#ifndef BITSET
+#define BITSET(d,b) ((d) |= 1U << (b))
+#define BITCLR(d,b) ((d) &= ~(1U << (b)))
+#define BITTGL(d,b) ((d) ^= 1U << (b))
+#define BITCHK(d,b) (0 != ((d) & (1U << (b))))
+#define BOOLEAN(v)  (0 != (v))
+#endif // BITSET
+
+#define LOBYTE(w)       (0x00FFU&(w))
+#define HIBYTE(w)       (((uint16_t)(w))>>BITS_IN_BYTE)
+
+#define INCTRUNC(d, m)  do { if ((d)<(m)) ++(d); } while (0)
+#define DECTRUNC(d, m)  do { if ((d)>(m)) --(d); } while (0)
+#define INCMOD(d, m)    do { d = ((d) < (m))? ((d)+1) : 0; } while (0)
+#define DECMOD(d, m)    do { d = ((d) > 0)? ((d)-1) : ((m)-1); } while (0)
+
+#define NUMEL(v)        (sizeof(v)/sizeof(*(v)))
 
 
 /*******************************************************************************
@@ -42,19 +68,9 @@
 /*******************************************************************************
  * FUNCTION PROTOTYPES WITH GLOBAL SCOPE
  ******************************************************************************/
-    // Se definen cantidad de ciclos de delay segun frecuencia del clock y segun DELAY_SEC
-    #if DCOCLK_FREQ_HZ == 1000000UL
-        #define DELAY_CYCLES 1000000*DELAY_SEC/3
-    #elif DCOCLK_FREQ_HZ == 8000000UL
-        #define DELAY_CYCLES 8000000*DELAY_SEC/3
-    #elif DCOCLK_FREQ_HZ == 12000000UL
-        #define DELAY_CYCLES 12000000*DELAY_SEC/3
-    #elif DCOCLK_FREQ_HZ == 61000000UL
-        #define DELAY_CYCLES 61000000*DELAY_SEC/3
-    #else
-    #endif
+
 
 /*******************************************************************************
  ******************************************************************************/
 
-#endif // _HARDWARE_H_
+#endif // _COMMON_H_

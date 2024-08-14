@@ -135,9 +135,6 @@ float temp_ReadTemperature(void){
     CountPerC   =  (float)   data[7];
     TEMP        =  ((float) (data[0] & TRUNC))/2 + ((CountPerC - CountRemain)/CountPerC) - CONV;
 
-    // Check CRC to see if data is valid, implement later
-    // Checl TEMP = 85.0 ?? --> delete data
-
     t_state = STANDBY;
 
     return TEMP;

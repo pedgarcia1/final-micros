@@ -1,39 +1,123 @@
-#include <msp430g2553.h>
-#include "74HC595.h"
+/***************************************************************************//**
+  @file     main.c
+  @brief    Archivo principal del TP8 ej. 1
+  @Author   Ignacion Quintana, Teo Nicoletti, Tristan Gonzalez Branca y Pedro Garcia Delucis
+ ******************************************************************************/
 
-#define LED BIT0
+/*******************************************************************************
+ * INCLUDE HEADER FILES
+ ******************************************************************************/
 
-unsigned char value = 0;
+#include "system.h"
+#include "gpio.h"
+#include "board.h"
+#include "hardware.h"
+#include "ledBar.h"
+#include "DS18B20.h"
 
-void setup_timer() {
-    // Configura el temporizador
-    TACCR0 = 32767;            // Establece el valor de comparación para 500 ms (aproximadamente).
-    TACTL = TASSEL_1 + MC_1;   // Usa ACLK (32.768 kHz) y modo Up.
-    TACCTL0 = CCIE;            // Habilita la interrupción para CCR0.
+
+/*******************************************************************************
+ * ENUMERATIONS AND STRUCTURES AND TYPEDEFS
+ ******************************************************************************/
+
+/*******************************************************************************
+ * VARIABLES WITH GLOBAL SCOPE
+ ******************************************************************************/
+uint16_t count = 0; // PASAR A ISR
+
+
+/*******************************************************************************
+ * FUNCTION PROTOTYPES FOR PRIVATE FUNCTIONS WITH FILE LEVEL SCOPE
+ ******************************************************************************/
+void AppInit(void);
+void AppRun(void);
+
+/*******************************************************************************
+ * STATIC VARIABLES AND CONST VARIABLES WITH FILE LEVEL SCOPE
+ ******************************************************************************/
+static const uint8_t power = 0; // 0 parasite power, 1 external power supply (Vdd)
+
+/*******************************************************************************
+ *******************************************************************************
+                        GLOBAL FUNCTION DEFINITIONS
+ *******************************************************************************
+ ******************************************************************************/
+
+void main(void)
+{
+    // NO TOCAR
+    systemInitFirst();
+    boardInit(); // Empty
+    AppInit();
+    systemInitLast();
+
+    for (;;)
+        AppRun();
+    // NO TOCAR
 }
 
-void main() {
-    WDTCTL = WDTPW + WDTHOLD;  // Detiene el temporizador watchdog.
-    P1DIR |= LED;              // Configura el pin del LED como salida.
+void AppInit(void)
+{
+    // Inicializaciï¿½n (se ejecuta 1 sola vez al comienzo)
+    // timerInitialization(13100); // 100ms timer perdios for ADC interrupt
+    // timerStart();
+    temp_Init(); // Inicializa el sensor de temperatura DS18B20
+    ledBarInit(); // Inicializa el display de 8 leds y el shift register 74HC595
 
-    __enable_interrupt();      // Habilita las interrupciones globales.
-    setup_timer();             // Configura el temporizador.
+}
 
-    // Inicializa el controlador del registro de desplazamiento.
-    shiftRegisterInit();
+void AppRun(void)
+{
+    // Loop (se ejecuta constantemente en un ciclo infinito)
+    uint8_t presence = 0;
+    float TEMP = 0;
 
-    while (1) {
-        // Bucle infinito, la funcionalidad principal se maneja mediante interrupciones.
+    switch (temp_CheckState())
+    {
+    case STANDBY:
+        presence = temp_Reset();
+        if (presence)
+        {
+            temp_StartConversion(power); // Set t_state to CONVERTING_T
+        }
+        break;
+    case CONVERSION_DONE:
+        presence = temp_Reset();
+        if (presence)
+        {
+            TEMP = temp_ReadTemperature(); // Set t_state to STANDBY
+        }
+        break;
+    default:
+        break;
     }
+
+    int led = (int) TEMP*8/40;
+    if(led != 0){
+        updateLedBar(led);
+    }
+
 }
 
-#pragma vector = TIMER0_A0_VECTOR
-__interrupt void Timer_A() {
-    shiftRegisterWrite(value);  // Envía el valor actual al registro de desplazamiento.
-    value++;           // Incrementa el valor.
-    P1OUT ^= LED;      // Alterna el estado del LED para indicar actividad.
+/*******************************************************************************
+ *******************************************************************************
+                        LOCAL FUNCTION DEFINITIONS
+ *******************************************************************************
+ ******************************************************************************/
 
-    if (value > 255) { // Resetea el valor si supera 255.
-        value = 0;
+// PASAR A ISR @TEO :) <3
+// ISR del Watchdog Timer
+#pragma vector = WDT_VECTOR
+__interrupt void WDT_ISR(void)
+{
+    // 1 interrupcion de timer cada 0.5ms
+    if (temp_CheckState() == CONVERTING_T)
+    {
+        count++;
+        if (count >= 750 * 2) // 1 interrupcion de timer cada 0.5ms
+        {
+            temp_SetState(CONVERSION_DONE);
+            count = 0;
+        }
     }
 }
