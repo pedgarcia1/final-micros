@@ -14,7 +14,8 @@
 #include "hardware.h"
 #include "ledBar.h"
 #include "DS18B20.h"
-
+#include "drv_UART.h"
+#include "isr.h"
 
 /*******************************************************************************
  * ENUMERATIONS AND STRUCTURES AND TYPEDEFS
@@ -63,6 +64,7 @@ void AppInit(void)
     // timerStart();
     temp_Init(); // Inicializa el sensor de temperatura DS18B20
     ledBarInit(); // Inicializa el display de 8 leds y el shift register 74HC595
+    UART_init(NO_PERIODIC);
 
 }
 
@@ -102,6 +104,9 @@ void AppRun(void)
     if(led != 0 && temp_CheckState() == STANDBY){
         updateLedBar(led);
     }
+
+    unsigned char str[5] = "temp\n";
+    UARTSendArray(str, 5);
 
 }
 
