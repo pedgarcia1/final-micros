@@ -24,6 +24,7 @@ enum DS1820_STATE {
     STANDBY,
     CONVERTING_T,
     CONVERSION_DONE,
+    READING_ERROR
 };
 
 // --------------- PROTOTYPES --------------- //

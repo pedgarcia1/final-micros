@@ -88,12 +88,18 @@ void AppRun(void)
             TEMP = temp_ReadTemperature(); // Set t_state to STANDBY
         }
         break;
+    case READING_ERROR:
+        presence = temp_Reset();
+        if (presence)
+        {
+            TEMP = temp_ReadTemperature(); // Set t_state to STANDBY
+        }
     default:
         break;
     }
 
-    int led = (int) TEMP*8/40;
-    if(led != 0){
+    int led = (int) TEMP*8/35;
+    if(led != 0 && temp_CheckState() == STANDBY){
         updateLedBar(led);
     }
 
@@ -114,7 +120,7 @@ __interrupt void WDT_ISR(void)
     if (temp_CheckState() == CONVERTING_T)
     {
         count++;
-        if (count >= 750 * 2) // 1 interrupcion de timer cada 0.5ms
+        if (count >= 1000 * 2) // 1 interrupcion de timer cada 0.5ms
         {
             temp_SetState(CONVERSION_DONE);
             count = 0;

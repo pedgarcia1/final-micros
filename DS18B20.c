@@ -11,6 +11,7 @@
 // --------------- PROTOTYPES --------------- //
 void    temp_writeByte(uint8_t byte);
 uint8_t temp_readByte(void);
+uint8_t temp_CRC8(uint8_t *addr, uint8_t len);
 
 // --------------- VARIABLES --------------- //
 enum DS1820_STATE t_state = STANDBY;    // STANDBY by default
@@ -131,11 +132,23 @@ float temp_ReadTemperature(void){
         data[i] = temp_readByte();
     }
 
-    CountRemain =  (float)   data[6];
-    CountPerC   =  (float)   data[7];
-    TEMP        =  ((float) (data[0] & TRUNC))/2 + ((CountPerC - CountRemain)/CountPerC) - CONV;
-
-    t_state = STANDBY;
+    uint8_t crc;
+    crc = temp_CRC8(data,8);
+    if(crc == data[8]) // Checks CRC against byte 9 of read data, calculate TEMP only if data is correct
+    {
+        CountRemain =  (float)   data[6];
+        CountPerC   =  (float)   data[7];
+        TEMP        =  ((float) (data[0] & TRUNC))/2 + ((CountPerC - CountRemain)/CountPerC) - CONV;
+        if(TEMP == 85.0 || TEMP == 0.0){ // Acording to datasheet, 85.0 degC indicates power-up temperature reading
+            TEMP = -1.0;
+            t_state = READING_ERROR; // Retry temperature read
+        }else{
+            t_state = STANDBY;
+        }
+    }else{
+        TEMP = -1.0;
+        t_state = READING_ERROR; // Retry temperature read
+    }
 
     return TEMP;
 
@@ -174,4 +187,22 @@ uint8_t temp_CheckState(void){
 // Input: state - STANDY, CONVERTING_T, CONVERSION_DONE
 void temp_SetState(enum DS1820_STATE state){
     t_state = state;
+}
+
+// Calculates 8 bit CRC, to check if data is valid
+// Input: pointer to data, usually len = 8
+uint8_t temp_CRC8(uint8_t *addr, uint8_t len)
+{
+	uint8_t crc = 0;
+    uint8_t i;
+	while (len--) {
+		uint8_t inbyte = *addr++;
+		for (i = 8; i; i--) {
+			uint8_t mix = (crc ^ inbyte) & 0x01;
+			crc >>= 1;
+			if (mix) crc ^= 0x8C;
+			inbyte >>= 1;
+		}
+	}
+	return crc;
 }
