@@ -2,32 +2,26 @@
 #include "DS18B20.h"
 #include "GPIO_OW.h"
 #include <stdint.h>
-#include "isr.h"
 
 // --------------- DEFINES --------------- //
-#define CONV            ((float)   0.25)
-#define TRUNC           ((uint8_t) 0xFE)
+#define CONV  ((float)   0.25)
+#define TRUNC ((uint8_t) 0xFE)
 #define DELAY_US(DELAY)  __delay_cycles(8*DELAY);
-
-#define CONV_PERIOD     2 // 1ms period, 0.5ms interrupt
-#define COUNT_MAX       (((CONV_PERIOD)/(CONV_TIME))*2)
 
 // --------------- PROTOTYPES --------------- //
 void    temp_writeByte(uint8_t byte);
 uint8_t temp_readByte(void);
 uint8_t temp_CRC8(uint8_t *addr, uint8_t len);
-void temp_timerISR(void);
 
 // --------------- VARIABLES --------------- //
 enum DS1820_STATE t_state = STANDBY;    // STANDBY by default
-volatile uint16_t count = 0;
 
 // --------------- FUNCTIONS --------------- //
 void temp_Init(void){
     PIN_OUTPUT(ONE_WIRE);
     DIGITAL_WRITE(ONE_WIRE, LOW);
 
-    send_to_isr(temp_timerISR,CONV_PERIOD);
+    // Timer init
 }
 
 
@@ -211,17 +205,4 @@ uint8_t temp_CRC8(uint8_t *addr, uint8_t len)
 		}
 	}
 	return crc;
-}
-
-
-void temp_timerISR(void){
-    if (temp_CheckState() == CONVERTING_T) // increase count, only if sensor is converting
-    {
-        count++;
-        if (count >= COUNT_MAX) // 750 ms min for 12 bit resolution
-        {
-            temp_SetState(CONVERSION_DONE);
-            count = 0;
-        }
-    }
 }

@@ -11,7 +11,6 @@
 // +Incluir los archivos de encabezado necesarios (ej: #include "template.h")+
 #include "isr.h"
 #include "hardware.h"
-#include "DS18B20.h"
 #include <stdlib.h>
 
 /*******************************************************************************
@@ -113,6 +112,8 @@ void send_to_timer_isr (void(*function)(void), unsigned int period) {
                         LOCAL FUNCTION DEFINITIONS
  *******************************************************************************
  ******************************************************************************/
+
+/*
 #pragma vector = WDT_VECTOR
 __interrupt void WDT_ISR(void) {
 
@@ -127,6 +128,7 @@ __interrupt void WDT_ISR(void) {
         }
     }
 }
+*/
 
 // Timer A interrupt service routine
 #pragma vector=TIMER0_A0_VECTOR        //Interrupt Service Routine (ISR) for CCR0 (only)
