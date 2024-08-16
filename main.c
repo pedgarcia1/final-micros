@@ -24,7 +24,6 @@
 /*******************************************************************************
  * VARIABLES WITH GLOBAL SCOPE
  ******************************************************************************/
-uint16_t count = 0; // PASAR A ISR
 
 
 /*******************************************************************************
@@ -115,20 +114,3 @@ void AppRun(void)
                         LOCAL FUNCTION DEFINITIONS
  *******************************************************************************
  ******************************************************************************/
-
-// PASAR A ISR @TEO :) <3
-// ISR del Watchdog Timer
-#pragma vector = WDT_VECTOR
-__interrupt void WDT_ISR(void)
-{
-    // 1 interrupcion de timer cada 0.5ms
-    if (temp_CheckState() == CONVERTING_T)
-    {
-        count++;
-        if (count >= 1000 * 2) // 1 interrupcion de timer cada 0.5ms
-        {
-            temp_SetState(CONVERSION_DONE);
-            count = 0;
-        }
-    }
-}

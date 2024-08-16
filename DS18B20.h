@@ -18,6 +18,8 @@
 #define CONVERTTEMP         0x44
 #define READ_POWER_SUPPLY   0xB4
 
+// Conversion time
+#define CONV_TIME           1000 // ms
 
 // Sensor state machine enum
 enum DS1820_STATE {
