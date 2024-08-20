@@ -105,9 +105,6 @@ void AppRun(void)
         updateLedBar(led);
     }
 
-    //unsigned char str[5] = "temp\n";
-    //UARTSendArray(str, 5);
-
 }
 
 /*******************************************************************************
