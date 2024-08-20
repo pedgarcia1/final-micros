@@ -128,7 +128,7 @@ __interrupt void WDT_ISR(void)
     if (temp_CheckState() == CONVERTING_T)
     {
         count++;
-        if (count >= 1300 * 2) // 1 interrupcion de timer cada 0.5ms
+        if (count >= 1000 * 2) // 1 interrupcion de timer cada 0.5ms
         {
             temp_SetState(CONVERSION_DONE);
             count = 0;

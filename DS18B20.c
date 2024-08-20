@@ -112,6 +112,7 @@ void temp_StartConversion(uint8_t power){
         PIN_OUTPUT(ONE_WIRE);
         DIGITAL_WRITE(ONE_WIRE, HIGH);
     }
+
     // start timer
 
     t_state = CONVERTING_T;
