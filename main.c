@@ -100,13 +100,13 @@ void AppRun(void)
         break;
     }
 
-    int led = (int) TEMP*8/35;
-    if(led != 0 && temp_CheckState() == STANDBY){
+    int led = (int) (0.8*TEMP-15.0);
+    if(led != 0 && temp_CheckState() == STANDBY && TEMP != 85.0){
         updateLedBar(led);
     }
 
-    unsigned char str[5] = "temp\n";
-    UARTSendArray(str, 5);
+    //unsigned char str[5] = "temp\n";
+    //UARTSendArray(str, 5);
 
 }
 
@@ -125,7 +125,7 @@ __interrupt void WDT_ISR(void)
     if (temp_CheckState() == CONVERTING_T)
     {
         count++;
-        if (count >= 1000 * 2) // 1 interrupcion de timer cada 0.5ms
+        if (count >= 1300 * 2) // 1 interrupcion de timer cada 0.5ms
         {
             temp_SetState(CONVERSION_DONE);
             count = 0;
