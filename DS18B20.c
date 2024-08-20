@@ -112,6 +112,7 @@ void temp_StartConversion(uint8_t power){
         PIN_OUTPUT(ONE_WIRE);
         DIGITAL_WRITE(ONE_WIRE, HIGH);
     }
+
     // start timer
 
     t_state = CONVERTING_T;
@@ -139,12 +140,8 @@ float temp_ReadTemperature(void){
         CountRemain =  (float)   data[6];
         CountPerC   =  (float)   data[7];
         TEMP        =  ((float) (data[0] & TRUNC))/2 + ((CountPerC - CountRemain)/CountPerC) - CONV;
-        if(TEMP == 85.0 || TEMP == 0.0){ // Acording to datasheet, 85.0 degC indicates power-up temperature reading
-            TEMP = -1.0;
-            t_state = READING_ERROR; // Retry temperature read
-        }else{
-            t_state = STANDBY;
-        }
+
+        t_state = STANDBY; // Retry temperature read
     }else{
         TEMP = -1.0;
         t_state = READING_ERROR; // Retry temperature read

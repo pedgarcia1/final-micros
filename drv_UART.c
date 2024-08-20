@@ -22,17 +22,16 @@
 /*******************************************************************************
  * ENUMERATIONS AND STRUCTURES AND TYPEDEFS
  ******************************************************************************/
+UART_Buffer uartRXBuffer = {{0}, 0, 0, 0};  // Buffer de recepcion
+
 
 /*******************************************************************************
  * VARIABLES WITH GLOBAL SCOPE
  ******************************************************************************/
 
-volatile unsigned char RXChar;
-static uint8_t RXFlag;
 unsigned char *periodicTX;
 unsigned char periodicLength;
 uint16_t uart_period;
-
 
 /*******************************************************************************
  * FUNCTION PROTOTYPES FOR PRIVATE FUNCTIONS WITH FILE LEVEL SCOPE
@@ -73,6 +72,7 @@ void UART_init(uint8_t periodic_flag){
     UCA0CTL1 &= ~UCSWRST;
 
     IE2 |= UCA0RXIE; // Enable USCI_A0 RX interrupt
+
     if(periodic_flag){
         setUARTPeriod(INITIAL_TIME);
     }
@@ -93,21 +93,13 @@ while(ArrayLength--){ // Loop until StringLength == 0 and post decrement
  }
 }
 
-uint8_t getRXStatus(){
-    // Devuelve el estado del flag de recepcion
-    return RXFlag;
+UART_Buffer* UART_getBuffer(void) {
+    return &uartRXBuffer;
 }
 
-void resetRXStatus(){
-    // Resetea el flag de recepcion a 0 (no hay recepcion)
-    RXFlag=0;
+uint8_t UART_connection(void) {
+    return uartRXBuffer.rx_flag;
 }
-
-uint8_t getChar(){
-    // Devuelve el caracter recibido
-    return RXChar;
-}
-
 
 void setUARTPeriod(uint16_t period){
     // Setea el periodo de trabajo de UART por interrupcion
@@ -147,6 +139,37 @@ void decrementUARTPeriod(){
 
     send_to_isr(UARTPeriodic,2*uart_period);
 }
+
+void UART_parseData(UART_Buffer* buffer, uint8_t* data1, uint8_t* data2, uint8_t* data3) {
+    uint8_t index = 0;
+    uint8_t comma_count = 0;
+    uint8_t temp[3] = {0, 0, 0};  // Temporal para almacenar los tres valores
+
+    for (index = 0; index < buffer->index; index++) {
+        if (buffer->data[index] == ',') {
+            comma_count++;
+        } else {
+            switch (comma_count) {
+                case 0:
+                    temp[0] = temp[0] * 10 + (buffer->data[index] - '0');
+                    break;
+                case 1:
+                    temp[1] = temp[1] * 10 + (buffer->data[index] - '0');
+                    break;
+                case 2:
+                    temp[2] = temp[2] * 10 + (buffer->data[index] - '0');
+                    break;
+            }
+        }
+    }
+
+    // Asignar los valores a las variables de salida
+    *data1 = temp[0];
+    *data2 = temp[1];
+    *data3 = temp[2];
+}
+
+
 /*******************************************************************************
  *******************************************************************************
                         LOCAL FUNCTION DEFINITIONS
@@ -162,12 +185,45 @@ void decrementUARTPeriod(){
 /**
  * @brief Interrupt BUFFER RX
  */
-#pragma vector=USCIAB0RX_VECTOR
+#pragma vector = USCIAB0RX_VECTOR
 __interrupt void USCI0RX_ISR(void)
 {
- RXFlag=1;
- RXChar=UCA0RXBUF;
+    // RXFlag = 1;
+    uint8_t rxdata;
+    if (IFG2 & UCA0RXIFG) { // Chequea si hay datos recibidos
+        rxdata = UCA0RXBUF; // Lee el byte recibido
+        if (!uartRXBuffer.receiving && rxdata == START_BYTE) { // Si el primer byte es el de inicio comienza la recepcion
+            uartRXBuffer.receiving = 1;
+            uartRXBuffer.index = 0;  // Reinicia el índice
+        } else if (uartRXBuffer.receiving) {
+            uartRXBuffer.data[uartRXBuffer.index++] = rxdata;
+
+            if (rxdata == STOP_BYTE) {
+                /* if (uartRXBuffer.index >= 2 && uartRXBuffer.data[uartRXBuffer.index - 2] == STOP_BYTE) {
+                    uint8_t sum = checksum(uartRXBuffer.data, uartRXBuffer.index - 3);
+                    uartRXBuffer.receiving = 0;
+                    if (sum == uartRXBuffer.data[uartRXBuffer.index - 3]) { // Datos recibidos correctamente
+                        uartRXBuffer.rx_flag = 1;  // Indica que la recepción ha terminado
+                    } else { // Error en los datos recibidos
+                        uartRXBuffer.index = 0;
+                    }
+                } */
+               // Por ahora, asumo que los datos llegan correctamente implementar checksum
+                uartRXBuffer.receiving = 0;
+                uartRXBuffer.rx_flag = 1;
+                uartRXBuffer.index--; // IMPORTANTE
+
+            /* } else if (uartRXBuffer.index >= sizeof(uartRXBuffer.data)) {
+                // Buffer overflow, resetear
+                uartRXBuffer.receiving = 0;
+                uartRXBuffer.index = 0;
+            }
+            */
+            // Idem, asumo que no hay overflow, implementar
+            }
+        }
+    }
+
 }
 
 /******************************************************************************/
-

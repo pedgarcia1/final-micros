@@ -100,13 +100,16 @@ void AppRun(void)
         break;
     }
 
-    int led = (int) TEMP*8/35;
-    if(led != 0 && temp_CheckState() == STANDBY){
+    int led = (int) (0.8*TEMP-15.0);
+    if(led != 0 && temp_CheckState() == STANDBY && TEMP != 85.0){
         updateLedBar(led);
     }
 
-    unsigned char str[5] = "temp\n";
-    UARTSendArray(str, 5);
+    if(UART_connection()){
+        UART_Buffer* rxBufferPointer = UART_getBuffer();
+        uint8_t setpoint, histeresis, intMuestreo;
+        UART_parseData(rxBufferPointer, &setpoint, &histeresis, &intMuestreo);
+    }
 
 }
 

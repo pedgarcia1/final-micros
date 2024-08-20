@@ -137,7 +137,7 @@ __interrupt void TIMER_ISR(void)
 
     uint8_t i;
     // Iterar sobre el vector de ISR y ejecutar las funciones correspondientes
-    for(i = 0; i<length; i++) {
+    for(i = 0; i<length_timer; i++) {
         timer_vector_ptr[i].counter--;
         if (!timer_vector_ptr[i].counter) {
             timer_vector_ptr[i].function_ptr();
