@@ -105,6 +105,12 @@ void AppRun(void)
         updateLedBar(led);
     }
 
+    if(UART_connection()){
+        UART_Buffer* rxBufferPointer = UART_getBuffer();
+        uint8_t setpoint, histeresis, intMuestreo;
+        UART_parseData(rxBufferPointer, &setpoint, &histeresis, &intMuestreo);
+    }
+
 }
 
 /*******************************************************************************

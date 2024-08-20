@@ -72,6 +72,7 @@ void UART_init(uint8_t periodic_flag){
     UCA0CTL1 &= ~UCSWRST;
 
     IE2 |= UCA0RXIE; // Enable USCI_A0 RX interrupt
+
     if(periodic_flag){
         setUARTPeriod(INITIAL_TIME);
     }
@@ -94,6 +95,10 @@ while(ArrayLength--){ // Loop until StringLength == 0 and post decrement
 
 UART_Buffer* UART_getBuffer(void) {
     return &uartRXBuffer;
+}
+
+uint8_t UART_connection(void) {
+    return uartRXBuffer.rx_flag;
 }
 
 void setUARTPeriod(uint16_t period){
@@ -134,6 +139,36 @@ void decrementUARTPeriod(){
 
     send_to_isr(UARTPeriodic,2*uart_period);
 }
+
+void UART_parseData(UART_Buffer* buffer, uint8_t* data1, uint8_t* data2, uint8_t* data3) {
+    uint8_t index = 0;
+    uint8_t comma_count = 0;
+    uint8_t temp[3] = {0, 0, 0};  // Temporal para almacenar los tres valores
+
+    for (index = 0; index < buffer->index; index++) {
+        if (buffer->data[index] == ',') {
+            comma_count++;
+        } else {
+            switch (comma_count) {
+                case 0:
+                    temp[0] = temp[0] * 10 + (buffer->data[index] - '0');
+                    break;
+                case 1:
+                    temp[1] = temp[1] * 10 + (buffer->data[index] - '0');
+                    break;
+                case 2:
+                    temp[2] = temp[2] * 10 + (buffer->data[index] - '0');
+                    break;
+            }
+        }
+    }
+
+    // Asignar los valores a las variables de salida
+    *data1 = temp[0];
+    *data2 = temp[1];
+    *data3 = temp[2];
+}
+
 
 /*******************************************************************************
  *******************************************************************************

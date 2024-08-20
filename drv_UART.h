@@ -29,7 +29,7 @@
  ******************************************************************************/
 typedef struct {
     uint8_t data[BUFFER_SIZE];   // Array para almacenar los datos recibidos
-    uint8_t index;       // �ndice para rastrear la posición actual en el array
+    uint8_t index;       // �ndice para rastrear la posición actual en el array
     uint8_t receiving;   // Flag para indicar si se está recibiendo datos
     uint8_t rx_flag;     // Flag para indicar que se recibieron datos
 } UART_Buffer;
@@ -63,6 +63,10 @@ UART_Buffer* UART_getBuffer();
  * @brief Devuelve el caracter recibido
 */
 uint8_t getChar();
+
+void UART_parseData(UART_Buffer* buffer, uint8_t* data1, uint8_t* data2, uint8_t* data3);
+
+uint8_t UART_connection(void);
 
 /**
  * @brief Setea el periodo de trabajo de UART
