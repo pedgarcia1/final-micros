@@ -16,6 +16,8 @@
 #include "DS18B20.h"
 #include "drv_UART.h"
 #include "isr.h"
+#include "pwm.h"
+#include "timer.h"
 
 /*******************************************************************************
  * ENUMERATIONS AND STRUCTURES AND TYPEDEFS
@@ -60,16 +62,17 @@ void main(void)
 void AppInit(void)
 {
     // Inicializaci�n (se ejecuta 1 sola vez al comienzo)
-    // timerInitialization(13100); // 100ms timer perdios for ADC interrupt
-    // timerStart();
+    timerInitialization(TIMER_PERIOD); // 100ms timer perdios for ADC interrupt
+    timerStart();
     temp_Init(); // Inicializa el sensor de temperatura DS18B20
     ledBarInit(); // Inicializa el display de 8 leds y el shift register 74HC595
     UART_init(NO_PERIODIC);
-
+    PWM_Init();
 }
 
 void AppRun(void)
 {
+
     // Loop (se ejecuta constantemente en un ciclo infinito)
     uint8_t presence = 0;
     float TEMP = 0;
@@ -110,6 +113,9 @@ void AppRun(void)
         uint8_t setpoint, histeresis, intMuestreo;
         UART_parseData(rxBufferPointer, &setpoint, &histeresis, &intMuestreo);
     }
+
+    PWM_setDC(70);
+
 
 }
 

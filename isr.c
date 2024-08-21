@@ -144,5 +144,6 @@ __interrupt void TIMER_ISR(void)
             timer_vector_ptr[i].counter = timer_vector_ptr[i].counter_reset;
         }
     }
+    TACTL &= ~TAIFG;    // Clear interrupt flag for Timer A
 
 }

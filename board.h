@@ -29,6 +29,10 @@
 #define LATCH PORTNUM2PIN(1,5)
 #define CLOCK PORTNUM2PIN(1,6)
 
+// PWM Pin
+#define PWM_PIN PORTNUM2PIN(2,2) // P2.2
+
+
 
 /*******************************************************************************
  * ENUMERATIONS AND STRUCTURES AND TYPEDEFS
