@@ -2,7 +2,7 @@
 #ifndef PWM_H_
 #define PWM_H_
 
-#include "gpio.h"
+
 #include "board.h"
 #include "timer.h"
 

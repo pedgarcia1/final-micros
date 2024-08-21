@@ -26,7 +26,6 @@
 /*******************************************************************************
  * VARIABLES WITH GLOBAL SCOPE
  ******************************************************************************/
-uint16_t count = 0; // PASAR A ISR
 
 
 /*******************************************************************************
@@ -68,6 +67,7 @@ void AppInit(void)
     ledBarInit(); // Inicializa el display de 8 leds y el shift register 74HC595
     UART_init(NO_PERIODIC);
     PWM_Init();
+    statusLed_init();
 }
 
 void AppRun(void)
@@ -106,15 +106,22 @@ void AppRun(void)
     int led = (int) (0.8*TEMP-15.0);
     if(led != 0 && temp_CheckState() == STANDBY && TEMP != 85.0){
         updateLedBar(led);
+        PWM_setDC(10*led);
     }
 
     if(UART_connection()){
         UART_Buffer* rxBufferPointer = UART_getBuffer();
         uint8_t setpoint, histeresis, intMuestreo;
         UART_parseData(rxBufferPointer, &setpoint, &histeresis, &intMuestreo);
+    }else{
+        uint8_t setpoint = 30;
+        uint8_t histeresis = 2;
+        uint8_t intMuestreo = 0;
     }
 
-    PWM_setDC(70);
+    statusLed_setPeriod(300);
+
+
 
 
 }
@@ -127,6 +134,7 @@ void AppRun(void)
 
 // PASAR A ISR @TEO :) <3
 // ISR del Watchdog Timer
+/*
 #pragma vector = WDT_VECTOR
 __interrupt void WDT_ISR(void)
 {
@@ -141,3 +149,4 @@ __interrupt void WDT_ISR(void)
         }
     }
 }
+*/

@@ -43,6 +43,10 @@ void ledBarInit();
 */
 void updateLedBar(unsigned int level);
 
+void statusLed_init(void);
+
+void statusLed_setPeriod(unsigned int period);
+
 /*******************************************************************************
  ******************************************************************************/
 

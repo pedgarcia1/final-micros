@@ -2,6 +2,7 @@
 #include "DS18B20.h"
 #include "GPIO_OW.h"
 #include <stdint.h>
+#include "isr.h"
 
 // --------------- DEFINES --------------- //
 #define CONV  ((float)   0.25)
@@ -12,9 +13,12 @@
 void    temp_writeByte(uint8_t byte);
 uint8_t temp_readByte(void);
 uint8_t temp_CRC8(uint8_t *addr, uint8_t len);
+void temp_ISR(void);
 
 // --------------- VARIABLES --------------- //
 enum DS1820_STATE t_state = STANDBY;    // STANDBY by default
+uint16_t count = 0; // PASAR A ISR
+
 
 // --------------- FUNCTIONS --------------- //
 void temp_Init(void){
@@ -22,6 +26,7 @@ void temp_Init(void){
     DIGITAL_WRITE(ONE_WIRE, LOW);
 
     // Timer init
+    send_to_isr(temp_ISR,1);
 }
 
 
@@ -202,4 +207,17 @@ uint8_t temp_CRC8(uint8_t *addr, uint8_t len)
 		}
 	}
 	return crc;
+}
+
+void temp_ISR(void){
+    // 1 interrupcion de timer cada 0.5ms
+        if (temp_CheckState() == CONVERTING_T)
+        {
+            count++;
+            if (count >= 1000 * 2) // 1 interrupcion de timer cada 0.5ms
+            {
+                temp_SetState(CONVERSION_DONE);
+                count = 0;
+            }
+        }
 }

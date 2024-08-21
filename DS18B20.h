@@ -27,6 +27,7 @@ enum DS1820_STATE {
     READING_ERROR
 };
 
+
 // --------------- PROTOTYPES --------------- //
 void    temp_Init(void);
 uint8_t temp_Reset(void);

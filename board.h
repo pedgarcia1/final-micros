@@ -30,7 +30,9 @@
 #define CLOCK PORTNUM2PIN(1,6)
 
 // PWM Pin
-#define PWM_PIN PORTNUM2PIN(2,2) // P2.2
+#define PWM_PIN BIT2 // P2.2
+
+#define STATUS_LED PORTNUM2PIN(2,1) // P2.1
 
 
 

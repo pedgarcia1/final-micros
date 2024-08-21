@@ -113,7 +113,6 @@ void send_to_timer_isr (void(*function)(void), unsigned int period) {
  *******************************************************************************
  ******************************************************************************/
 
-/*
 #pragma vector = WDT_VECTOR
 __interrupt void WDT_ISR(void) {
 
@@ -128,7 +127,6 @@ __interrupt void WDT_ISR(void) {
         }
     }
 }
-*/
 
 // Timer A interrupt service routine
 #pragma vector=TIMER0_A0_VECTOR        //Interrupt Service Routine (ISR) for CCR0 (only)
