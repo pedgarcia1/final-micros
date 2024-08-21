@@ -18,6 +18,7 @@
 #include "isr.h"
 #include "pwm.h"
 #include "timer.h"
+#include "statusLed.h"
 
 /*******************************************************************************
  * ENUMERATIONS AND STRUCTURES AND TYPEDEFS
@@ -119,7 +120,7 @@ void AppRun(void)
         uint8_t intMuestreo = 0;
     }
 
-    statusLed_setPeriod(300);
+    statusLed_setState(NORMAL);
 
 
 

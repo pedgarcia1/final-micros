@@ -8,9 +8,6 @@
  * INCLUDE HEADER FILES
  ******************************************************************************/
 #include "74hc595.h"
-#include "isr.h"
-#include "gpio.h"
-#include "board.h"
 
 /*******************************************************************************
  * CONSTANT AND MACRO DEFINITIONS USING #DEFINE
@@ -23,13 +20,11 @@
 /*******************************************************************************
  * VARIABLES WITH GLOBAL SCOPE
  ******************************************************************************/
-unsigned int period_global = 1000;
 
 /*******************************************************************************
  * FUNCTION PROTOTYPES FOR PRIVATE FUNCTIONS WITH FILE LEVEL SCOPE
  ******************************************************************************/
 unsigned char set_led(unsigned int i);
-void statusLedISR(void);
 
 /*******************************************************************************
  * ROM CONST VARIABLES WITH FILE LEVEL SCOPE
@@ -108,17 +103,4 @@ unsigned char set_led(unsigned int i) {
     return leds;
 }
 
-void statusLed_init(void){
-    gpioMode(STATUS_LED,OUTPUT);
-    send_to_isr(statusLedISR,period_global);
-}
-
-void statusLedISR(void){
-    gpioToggle(STATUS_LED);
-    send_to_isr(statusLedISR,period_global); // Change ISR period, only after cycle complete
-}
-
-void statusLed_setPeriod(unsigned int period){
-    period_global = period;
-}
 
