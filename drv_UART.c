@@ -22,8 +22,8 @@
 /*******************************************************************************
  * ENUMERATIONS AND STRUCTURES AND TYPEDEFS
  ******************************************************************************/
-UART_Buffer uartRXBuffer = {{0}, 0, 0, 0};  // Buffer de recepcion
-
+UART_RX_Buffer uartRXBuffer = {{0}, 0, 0, 0};  // Buffer de recepcion inicializado
+UART_TX_Buffer uartTXBuffer = {NULL, 0, 0};  // Buffer de transmisión inicializado
 
 /*******************************************************************************
  * VARIABLES WITH GLOBAL SCOPE
@@ -81,19 +81,23 @@ void UART_init(uint8_t periodic_flag){
 
 
 void UARTSendArray(unsigned char *TxArray, unsigned char ArrayLength){
- // Send number of bytes Specified in ArrayLength in the array at using the hardware UART 0
- // Example usage: UARTSendArray("Hello", 5);
- // int data[2]={1023, 235};
- // UARTSendArray(data, 4); // Note because the UART transmits bytes it is necessary to send two bytes for each integer hence the data length is twice the array length
+    // Guarda el puntero al array y el largo en el buffer
+    if(!uartTXBuffer.transmiting){
+    uartTXBuffer.str = TxArray;
+    uartTXBuffer.length = ArrayLength;
+    uartTXBuffer.transmiting = 1;
 
+    UC0IE |= UCA0TXIE;  // Enable USCI_A0 TX interrupt
+    }
+    /*
 while(ArrayLength--){ // Loop until StringLength == 0 and post decrement
     while(!(IFG2 & UCA0TXIFG)); // Wait for TX buffer to be ready for new data
     UCA0TXBUF = *TxArray; //Write the character at the location specified py the pointer
     TxArray++; //Increment the TxString pointer to point to the next character
- }
+ } */
 }
 
-UART_Buffer* UART_getBuffer(void) {
+UART_RX_Buffer* UART_getBuffer(void) {
     return &uartRXBuffer;
 }
 
@@ -140,7 +144,7 @@ void decrementUARTPeriod(){
     send_to_isr(UARTPeriodic,2*uart_period);
 }
 
-void UART_parseData(UART_Buffer* buffer, uint8_t* data1, uint8_t* data2, uint8_t* data3) {
+void UART_parseData(UART_RX_Buffer* buffer, uint8_t* data1, uint8_t* data2, uint8_t* data3) {
     uint8_t index = 0;
     uint8_t comma_count = 0;
     uint8_t temp[3] = {0, 0, 0};  // Temporal para almacenar los tres valores
@@ -224,6 +228,33 @@ __interrupt void USCI0RX_ISR(void)
         }
     }
 
+}
+
+/**
+ * @brief Interrupt BUFFER TX
+ */
+#pragma vector=USCIAB0TX_VECTOR
+__interrupt void USCI0TX_ISR(void)
+{
+    if (uartTXBuffer.length > 0) {
+            // Envía el siguiente byte desde el buffer
+            UCA0TXBUF = *uartTXBuffer.str;
+
+            // Avanza el puntero y decrementa la longitud
+            uartTXBuffer.str++;
+            uartTXBuffer.length--;
+        } else {
+            uartTXBuffer.transmiting = 0;
+            UC0IE &= ~UCA0TXIE; // Disable USCI_A0 TX interrupt
+        }
+  /* UCA0TXBUF = string1[i++];                 // TX next character
+  P1OUT |= BIT6;
+  while (!(IFG2&UCA0TXIFG));
+  _delay_cycles(20);
+  P1OUT &= ~BIT6;
+  if (i == sizeof string1 - 1)              // TX over?
+    IE2 &= ~UCA0TXIE;                       // Disable USCI_A0 TX interrupt
+    */
 }
 
 /******************************************************************************/

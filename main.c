@@ -39,6 +39,8 @@ void AppRun(void);
  * STATIC VARIABLES AND CONST VARIABLES WITH FILE LEVEL SCOPE
  ******************************************************************************/
 static const uint8_t power = 0; // 0 parasite power, 1 external power supply (Vdd)
+uint8_t setpoint, histeresis, intMuestreo, temp_int;
+uint8_t calefactor = 0;
 
 /*******************************************************************************
  *******************************************************************************
@@ -78,6 +80,8 @@ void AppRun(void)
     uint8_t presence = 0;
     float TEMP = 0;
 
+
+
     switch (temp_CheckState())
     {
     case STANDBY:
@@ -107,21 +111,41 @@ void AppRun(void)
     int led = (int) (0.8*TEMP-15.0);
     if(led != 0 && temp_CheckState() == STANDBY && TEMP != 85.0){
         updateLedBar(led);
-        PWM_setDC(10*led);
+
+        temp_int = ((uint8_t) TEMP);
+        unsigned char str[8];
+        str[0] = temp_int / 10 + '0'; // primer digito
+        str[1] = temp_int % 10 + '0'; // segundo digito
+        str[2] = '.'; // punto decimal
+        str[3] = (int) (TEMP * 10) % 10 + '0';  // primer decimal
+        str[4] = (int) (TEMP * 100) % 10 + '0'; // segundo decimal
+        str[5] = ','; // coma
+        str[6] = calefactor + '0'; // estado del calefactor calefactor
+        str[7] = '\n';
+        UARTSendArray(str, 8);
     }
 
     if(UART_connection()){
-        UART_Buffer* rxBufferPointer = UART_getBuffer();
-        uint8_t setpoint, histeresis, intMuestreo;
+        statusLed_setState(NORMAL);
+
+        UART_RX_Buffer* rxBufferPointer = UART_getBuffer();
         UART_parseData(rxBufferPointer, &setpoint, &histeresis, &intMuestreo);
     }else{
-        uint8_t setpoint = 30;
-        uint8_t histeresis = 2;
-        uint8_t intMuestreo = 0;
+        statusLed_setState(ERROR);
+
+        setpoint = 30;
+        histeresis = 2;
+        intMuestreo = 0;
     }
 
-    statusLed_setState(NORMAL);
 
+    if(temp_int > setpoint + histeresis){
+        PWM_setDC(0);
+        calefactor = 0; // OFF
+    }else if(temp_int < setpoint - histeresis){
+        PWM_setDC(100);
+        calefactor = 1; // ON
+    }
 
 
 
