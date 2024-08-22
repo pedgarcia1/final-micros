@@ -80,8 +80,6 @@ void AppRun(void)
     uint8_t presence = 0;
     float TEMP = 0;
 
-
-
     switch (temp_CheckState())
     {
     case STANDBY:
@@ -140,10 +138,10 @@ void AppRun(void)
 
 
     if(temp_int > setpoint + histeresis){
-        PWM_setDC(0);
+        PWM_setDC(10);
         calefactor = 0; // OFF
     }else if(temp_int < setpoint - histeresis){
-        PWM_setDC(100);
+        PWM_setDC(90);
         calefactor = 1; // ON
     }
 
