@@ -22,7 +22,7 @@
 /*******************************************************************************
  * ENUMERATIONS AND STRUCTURES AND TYPEDEFS
  ******************************************************************************/
-UART_RX_Buffer uartRXBuffer = {{0}, 0, 0, 0};  // Buffer de recepcion inicializado
+UART_RX_Buffer uartRXBuffer = { .head = 0, .tail = 0, .count = 0, .receiving = 0, .rx_flag = 0 };
 UART_TX_Buffer uartTXBuffer = {NULL, 0, 0};  // Buffer de transmisión inicializado
 
 /*******************************************************************************
@@ -145,33 +145,65 @@ void decrementUARTPeriod(){
 }
 
 void UART_parseData(UART_RX_Buffer* buffer, uint8_t* data1, uint8_t* data2, uint8_t* data3) {
-    uint8_t index = 0;
-    uint8_t comma_count = 0;
     uint8_t temp[3] = {0, 0, 0};  // Temporal para almacenar los tres valores
+    uint8_t comma_count = 0;
+    uint8_t byte;
+    uint8_t parsing = 0;
 
-    for (index = 0; index < buffer->index; index++) {
-        if (buffer->data[index] == ',') {
-            comma_count++;
-        } else {
-            switch (comma_count) {
-                case 0:
-                    temp[0] = temp[0] * 10 + (buffer->data[index] - '0');
-                    break;
-                case 1:
-                    temp[1] = temp[1] * 10 + (buffer->data[index] - '0');
-                    break;
-                case 2:
-                    temp[2] = temp[2] * 10 + (buffer->data[index] - '0');
-                    break;
+    // Procesa el buffer circular desde `tail` hasta `head`
+    while ((buffer->tail != buffer->head) && (buffer->receiving == 0)) {
+        byte = buffer->data[buffer->tail];  // Lee el byte actual
+        buffer->tail = (buffer->tail + 1) % BUFFER_SIZE;  // Avanza el índice `tail` de manera circular
+
+        if (byte == START_BYTE) {
+            // Reinicia el proceso si se detecta un nuevo START_BYTE
+            comma_count = 0;
+            temp[0] = temp[1] = temp[2] = 0;
+            parsing = 1;  // Inicia el parseo
+        } else if (parsing && byte == STOP_BYTE) {
+            // Si se detecta STOP_BYTE, finaliza el parseo y asigna los valores
+            *data1 = temp[0];
+            *data2 = temp[1];
+            *data3 = temp[2];
+            parsing = 0;  // Finaliza el parseo
+            // uartRXBuffer.rx_flag = 0; // reset rx_flag
+            break;
+        } else if (parsing) {
+            // Procesa el contenido entre START_BYTE y STOP_BYTE
+            if (byte == ',') {
+                comma_count++;
+            } else {
+                // Llena el valor correspondiente según el número de comas encontradas
+                switch (comma_count) {
+                    case 0:
+                        temp[0] = temp[0] * 10 + (byte - '0');
+                        break;
+                    case 1:
+                        temp[1] = temp[1] * 10 + (byte - '0');
+                        break;
+                    case 2:
+                        temp[2] = temp[2] * 10 + (byte - '0');
+                        break;
+                }
             }
         }
     }
-
-    // Asignar los valores a las variables de salida
-    *data1 = temp[0];
-    *data2 = temp[1];
-    *data3 = temp[2];
 }
+
+
+
+uint8_t UARTReadByte(void) {
+    uint8_t data = 0;
+
+    if (uartRXBuffer.count > 0) {
+        data = uartRXBuffer.data[uartRXBuffer.tail];
+        uartRXBuffer.tail = (uartRXBuffer.tail + 1) % BUFFER_SIZE;  // Incrementa el índice de cola de manera circular
+        uartRXBuffer.count--;  // Decrementa el contador de bytes disponibles
+    }
+
+    return data;
+}
+
 
 
 /*******************************************************************************
@@ -192,43 +224,36 @@ void UART_parseData(UART_RX_Buffer* buffer, uint8_t* data1, uint8_t* data2, uint
 #pragma vector = USCIAB0RX_VECTOR
 __interrupt void USCI0RX_ISR(void)
 {
-    // RXFlag = 1;
     uint8_t rxdata;
     if (IFG2 & UCA0RXIFG) { // Chequea si hay datos recibidos
         rxdata = UCA0RXBUF; // Lee el byte recibido
-        if (!uartRXBuffer.receiving && rxdata == START_BYTE) { // Si el primer byte es el de inicio comienza la recepcion
-            uartRXBuffer.receiving = 1;
-            uartRXBuffer.index = 0;  // Reinicia el Ã­ndice
-        } else if (uartRXBuffer.receiving) {
-            uartRXBuffer.data[uartRXBuffer.index++] = rxdata;
 
-            if (rxdata == STOP_BYTE) {
-                /* if (uartRXBuffer.index >= 2 && uartRXBuffer.data[uartRXBuffer.index - 2] == STOP_BYTE) {
-                    uint8_t sum = checksum(uartRXBuffer.data, uartRXBuffer.index - 3);
-                    uartRXBuffer.receiving = 0;
-                    if (sum == uartRXBuffer.data[uartRXBuffer.index - 3]) { // Datos recibidos correctamente
-                        uartRXBuffer.rx_flag = 1;  // Indica que la recepciÃ³n ha terminado
-                    } else { // Error en los datos recibidos
-                        uartRXBuffer.index = 0;
-                    }
-                } */
-               // Por ahora, asumo que los datos llegan correctamente implementar checksum
-                uartRXBuffer.receiving = 0;
-                uartRXBuffer.rx_flag = 1;
-                uartRXBuffer.index--; // IMPORTANTE
+        if (!uartRXBuffer.receiving && rxdata == START_BYTE) {
+            uartRXBuffer.receiving = 1; // Comienza la recepción si el byte inicial es el de inicio
+        }
 
-            /* } else if (uartRXBuffer.index >= sizeof(uartRXBuffer.data)) {
-                // Buffer overflow, resetear
-                uartRXBuffer.receiving = 0;
-                uartRXBuffer.index = 0;
+        if (uartRXBuffer.receiving) {
+            // Guarda el byte recibido en el buffer circular
+            uartRXBuffer.data[uartRXBuffer.head] = rxdata;
+            uartRXBuffer.head = (uartRXBuffer.head + 1) % BUFFER_SIZE;  // Incrementa el índice de cabeza de manera circular
+            uartRXBuffer.count++;
+
+            if (rxdata == STOP_BYTE) {  // Si se recibe el byte de fin de paquete
+                uartRXBuffer.receiving = 0; // Finaliza la recepción
+                uartRXBuffer.rx_flag = 1;  // Indica que se ha recibido un paquete completo
             }
-            */
-            // Idem, asumo que no hay overflow, implementar
+
+            if (uartRXBuffer.count >= BUFFER_SIZE) {  // Manejo de overflow
+                // Aquí podrías implementar lógica de manejo de overflow si es necesario
+                // Por ejemplo, podrías descartar el dato más antiguo, ignorar el nuevo, etc.
+                // En este caso, simplemente sobrescribimos el dato más antiguo.
+                uartRXBuffer.tail = (uartRXBuffer.tail + 1) % BUFFER_SIZE;  // Descartamos el byte más antiguo
+                uartRXBuffer.count--;  // Mantenemos el conteo de bytes correcto
             }
         }
     }
-
 }
+
 
 /**
  * @brief Interrupt BUFFER TX
@@ -247,14 +272,6 @@ __interrupt void USCI0TX_ISR(void)
             uartTXBuffer.transmiting = 0;
             UC0IE &= ~UCA0TXIE; // Disable USCI_A0 TX interrupt
         }
-  /* UCA0TXBUF = string1[i++];                 // TX next character
-  P1OUT |= BIT6;
-  while (!(IFG2&UCA0TXIFG));
-  _delay_cycles(20);
-  P1OUT &= ~BIT6;
-  if (i == sizeof string1 - 1)              // TX over?
-    IE2 &= ~UCA0TXIE;                       // Disable USCI_A0 TX interrupt
-    */
 }
 
 /******************************************************************************/

@@ -131,9 +131,13 @@ void AppRun(void)
     }else{
         statusLed_setState(ERROR);
 
-        setpoint = 30;
-        histeresis = 2;
-        intMuestreo = 0;
+
+    }
+
+    uint8_t setpoint_anterior = setpoint;
+    if(setpoint_anterior != setpoint){
+        uint8_t guardar;
+        guardar = setpoint - 1;
     }
 
 
