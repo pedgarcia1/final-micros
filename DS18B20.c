@@ -13,8 +13,7 @@
 void temp_writeByte(uint8_t byte);
 uint8_t temp_readByte(void);
 uint8_t temp_CRC8(uint8_t *addr, uint8_t len);
-void temp_ISR(void);
-
+void temp_isr(void);
 // --------------- VARIABLES --------------- //
 enum DS1820_STATE t_state = STANDBY;    // STANDBY by default
 uint16_t t_muestreo = 1000*2;  // 1 interrupcion de timer cada 0.5ms => una medición cada 1s
@@ -43,20 +42,6 @@ uint8_t temp_Reset(void){
     PIN_OUTPUT(ONE_WIRE);
     DIGITAL_WRITE(ONE_WIRE, HIGH);
     return r;
-
-    /*
-    if(!DIGITAL_READ(ONE_WIRE)){
-        DELAY_US(410);
-        PIN_OUTPUT(ONE_WIRE);
-        DIGITAL_WRITE(ONE_WIRE, HIGH);
-        return 1;
-    }
-    else{
-        PIN_OUTPUT(ONE_WIRE);
-        DIGITAL_WRITE(ONE_WIRE, HIGH);
-        return 0;
-    }
-    */
 }
 
 void temp_writeByte(uint8_t byte){
@@ -117,7 +102,7 @@ void temp_StartConversion(uint8_t power){
     // start timer
 
     t_state = CONVERTING_T;
-    send_to_timer_isr(temp_isr, t_muestreo);
+    send_to_isr(temp_isr, t_muestreo);
 }
 
 // Read the scratchpad data from the DS18B20
@@ -209,7 +194,7 @@ uint8_t temp_CRC8(uint8_t *addr, uint8_t len)
 
 void temp_isr(void){
     temp_SetState(CONVERSION_DONE);
-    remove_from_timer_isr(temp_isr);
+    remove_from_isr(temp_isr);
 }
 
 void temp_SetResolution(uint8_t resolution) {
@@ -220,15 +205,4 @@ void temp_SetResolution(uint8_t resolution) {
     temp_writeByte(resolution);   // Configurar resoluci�n
 }
 
-// void temp_ISR(void){
-//     // 1 interrupcion de timer cada 0.5ms
-//         if (temp_CheckState() == CONVERTING_T)
-//         {
-//             count++;
-//             if (count >= 1000 * 2) // 1 interrupcion de timer cada 0.5ms
-//             {
-//                 temp_SetState(CONVERSION_DONE);
-//                 count = 0;
-//             }
-//         }
-// }
+
