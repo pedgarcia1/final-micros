@@ -37,6 +37,8 @@
  * FUNCTION PROTOTYPES WITH GLOBAL SCOPE
  ******************************************************************************/
 
+// +ej: Declarar prototipos de funciones globales aqu� (ej: char lcd_goto (int fil, int col);)+
+
 /**
  * @brief Env�a una funci�n para que se ejecute en la rutina de servicio de interrupci�n
  * @param function Puntero a la funci�n que se ejecutar�
@@ -45,14 +47,24 @@
 void send_to_isr(void (*function)(void), unsigned int period);
 
 /**
+ * @brief Elimina una funci�n del vector de interrupciones
+ * @param function Puntero a la funci�n que se eliminar�
+ */
+void remove_from_isr(void (*function)(void));
+
+
+/**
  * @brief Env�a una funci�n para que se ejecute en la rutina de servicio de interrupci�n del timer A
  * @param function Puntero a la funci�n que se ejecutar�
  * @param period Per�odo de ejecuci�n de la funci�n en n�mero de interrupciones (ej: 1 = en cada interrupci�n, 2 = en cada 2 interrupciones, etc.)
  */
 void send_to_timer_isr (void(*function)(void), unsigned int period);
 
-// +ej: Declarar prototipos de funciones globales aqu� (ej: char lcd_goto (int fil, int col);)+
-
+/**
+ * @brief Elimina una funci�n del vector de interrupciones del timer A
+ * @param function Puntero a la funci�n que se eliminar�
+ */
+void remove_from_timer_isr (void(*function)(void));
 
 /*******************************************************************************
  ******************************************************************************/

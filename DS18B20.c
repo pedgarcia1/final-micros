@@ -10,22 +10,19 @@
 #define DELAY_US(DELAY)  __delay_cycles(8*DELAY);
 
 // --------------- PROTOTYPES --------------- //
-void    temp_writeByte(uint8_t byte);
+void temp_writeByte(uint8_t byte);
 uint8_t temp_readByte(void);
 uint8_t temp_CRC8(uint8_t *addr, uint8_t len);
 void temp_ISR(void);
 
 // --------------- VARIABLES --------------- //
 enum DS1820_STATE t_state = STANDBY;    // STANDBY by default
-uint16_t count = 0; // PASAR A ISR
+uint16_t t_muestreo = 1000*2;  // 1 interrupcion de timer cada 0.5ms => una mediciÃ³n cada 1s
 
 // --------------- FUNCTIONS --------------- //
 void temp_Init(void){
     PIN_OUTPUT(ONE_WIRE);
     DIGITAL_WRITE(ONE_WIRE, LOW);
-
-    // Timer init
-    send_to_isr(temp_ISR,1);
 
     t_state = STANDBY;
 }
@@ -120,6 +117,7 @@ void temp_StartConversion(uint8_t power){
     // start timer
 
     t_state = CONVERTING_T;
+    send_to_timer_isr(temp_isr, t_muestreo);
 }
 
 // Read the scratchpad data from the DS18B20
@@ -208,17 +206,10 @@ uint8_t temp_CRC8(uint8_t *addr, uint8_t len)
 	return crc;
 }
 
-void temp_ISR(void){
-    // 1 interrupcion de timer cada 0.5ms
-        if (temp_CheckState() == CONVERTING_T)
-        {
-            count++;
-            if (count >= 1000 * 2) // 1 interrupcion de timer cada 0.5ms
-            {
-                temp_SetState(CONVERSION_DONE);
-                count = 0;
-            }
-        }
+
+void temp_isr(void){
+    temp_SetState(CONVERSION_DONE);
+    remove_from_timer_isr(temp_isr);
 }
 
 void temp_SetResolution(uint8_t resolution) {
@@ -226,5 +217,18 @@ void temp_SetResolution(uint8_t resolution) {
     temp_writeByte(WRITE_SCRATCHPAD);           // Comando Write Scratchpad
     temp_writeByte(0x00);                       // TH register
     temp_writeByte(0x00);                       // TL register
-    temp_writeByte(resolution);   // Configurar resolución
+    temp_writeByte(resolution);   // Configurar resoluciï¿½n
 }
+
+// void temp_ISR(void){
+//     // 1 interrupcion de timer cada 0.5ms
+//         if (temp_CheckState() == CONVERTING_T)
+//         {
+//             count++;
+//             if (count >= 1000 * 2) // 1 interrupcion de timer cada 0.5ms
+//             {
+//                 temp_SetState(CONVERSION_DONE);
+//                 count = 0;
+//             }
+//         }
+// }
