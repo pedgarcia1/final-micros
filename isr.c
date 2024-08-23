@@ -17,8 +17,8 @@
  * CONSTANT AND MACRO DEFINITIONS USING #DEFINE
  ******************************************************************************/
 
-#define LARGO_VECTOR_ISR 6
-
+#define LARGO_VECTOR_ISR 5
+#define LARGO_VECTOR_TIMER_ISR 5
 /*******************************************************************************
  * ENUMERATIONS AND STRUCTURES AND TYPEDEFS
  ******************************************************************************/
@@ -63,7 +63,7 @@ isr_t isr_vector[LARGO_VECTOR_ISR];
 static isr_t *vector_ptr = isr_vector;
 static unsigned int length = 0;
 
-isr_t timer_isr_vector[3];
+isr_t timer_isr_vector[LARGO_VECTOR_TIMER_ISR];
 static isr_t *timer_vector_ptr = timer_isr_vector;
 static unsigned int length_timer = 0;
 
@@ -98,6 +98,22 @@ void send_to_isr (void(*function)(void), unsigned int period) {
     length++;
 }
 
+void remove_from_isr (void(*function)(void)) {
+
+    // Eliminar la función del vector de ISR
+    uint8_t i;
+    for (i = 0; i < length; i++) {
+        if (vector_ptr[i].function_ptr == function) {
+            vector_ptr[i].function_ptr = NULL;
+            vector_ptr[i].counter_reset = 0;
+            vector_ptr[i].counter = 0;
+            length--;
+            return;
+        }
+    }
+}
+
+
 void send_to_timer_isr (void(*function)(void), unsigned int period) {
 
     // A�adir la funci�n y su per�odo al vector de ISR
@@ -105,6 +121,21 @@ void send_to_timer_isr (void(*function)(void), unsigned int period) {
     timer_isr_vector[length_timer].counter_reset = period;
     timer_isr_vector[length_timer].counter = period;
     length_timer++;
+}
+
+void remove_from_timer_isr (void(*function)(void)) {
+
+    // Eliminar la función del vector de ISR
+    uint8_t i;
+    for (i = 0; i < length_timer; i++) {
+        if (timer_vector_ptr[i].function_ptr == function) {
+            timer_vector_ptr[i].function_ptr = NULL;
+            timer_vector_ptr[i].counter_reset = 0;
+            timer_vector_ptr[i].counter = 0;
+            length_timer--;
+            return;
+        }
+    }
 }
 
 /*******************************************************************************
