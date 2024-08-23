@@ -205,4 +205,7 @@ void temp_SetResolution(uint8_t resolution) {
     temp_writeByte(resolution);   // Configurar resoluci�n
 }
 
-
+// value: nuevo tiempo de muestreo en ms
+void temp_setTMuestreo(uint16_t value){
+    t_muestreo = value*2;
+}

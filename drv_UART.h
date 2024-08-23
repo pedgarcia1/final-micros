@@ -74,7 +74,7 @@ UART_RX_Buffer* UART_getBuffer();
 */
 uint8_t getChar();
 
-void UART_parseData(UART_RX_Buffer* buffer, uint8_t* data1, uint8_t* data2, uint8_t* data3);
+void UART_parseData(UART_RX_Buffer* buffer, uint8_t* setpoint, uint8_t* histeresis, uint16_t* data3);
 
 uint8_t UART_connection(void);
 

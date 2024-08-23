@@ -39,7 +39,8 @@ void AppRun(void);
  * STATIC VARIABLES AND CONST VARIABLES WITH FILE LEVEL SCOPE
  ******************************************************************************/
 static const uint8_t power = 0; // 0 parasite power, 1 external power supply (Vdd)
-uint8_t setpoint, histeresis, intMuestreo, temp_int;
+uint8_t setpoint, histeresis, temp_int;
+uint16_t intMuestreo;
 uint8_t calefactor = 0;
 
 /*******************************************************************************
@@ -71,11 +72,12 @@ void AppInit(void)
     UART_init(NO_PERIODIC);
     PWM_Init();
     statusLed_init();
+    // temp_SetResolution(TEMP_9_BIT);
 
     // Valores para debug
     setpoint = 30;
     histeresis = 1;
-    intMuestreo = 1;
+    intMuestreo = 1000;
 }
 
 void AppRun(void)
@@ -124,6 +126,7 @@ void AppRun(void)
 
         UART_RX_Buffer* rxBufferPointer = UART_getBuffer();
         UART_parseData(rxBufferPointer, &setpoint, &histeresis, &intMuestreo);
+        temp_setTMuestreo(intMuestreo);
     }else{
         statusLed_setState(ERROR);
 

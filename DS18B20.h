@@ -44,5 +44,6 @@ uint8_t temp_CheckPower(void);
 void    temp_SetState(enum DS1820_STATE state);
 uint8_t temp_CheckState(void);
 void temp_SetResolution(uint8_t resolution);
+void temp_setTMuestreo(uint16_t value);
 
 #endif // _DS18B20_H_

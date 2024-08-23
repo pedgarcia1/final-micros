@@ -138,8 +138,9 @@ void decrementUARTPeriod(){
     send_to_isr(UARTPeriodic,2*uart_period);
 }
 
-void UART_parseData(UART_RX_Buffer* buffer, uint8_t* data1, uint8_t* data2, uint8_t* data3) {
-    uint8_t temp[3] = {0, 0, 0};  // Temporal para almacenar los tres valores
+void UART_parseData(UART_RX_Buffer* buffer, uint8_t* setpoint, uint8_t* histeresis, uint16_t* data3) {
+    uint8_t temp[2] = {0, 0};  // Temporal para almacenar los valores de setpoint y histeresis
+    uint16_t temp3 = 0;  // Temporal para almacenar el tercer valor (de hasta 4 dígitos)
     uint8_t comma_count = 0;
     uint8_t byte;
     uint8_t parsing = 0;
@@ -152,15 +153,15 @@ void UART_parseData(UART_RX_Buffer* buffer, uint8_t* data1, uint8_t* data2, uint
         if (byte == START_BYTE) {
             // Reinicia el proceso si se detecta un nuevo START_BYTE
             comma_count = 0;
-            temp[0] = temp[1] = temp[2] = 0;
+            temp[0] = temp[1] = 0;
+            temp3 = 0;
             parsing = 1;  // Inicia el parseo
         } else if (parsing && byte == STOP_BYTE) {
             // Si se detecta STOP_BYTE, finaliza el parseo y asigna los valores
-            *data1 = temp[0];
-            *data2 = temp[1];
-            *data3 = temp[2];
+            *setpoint = temp[0];
+            *histeresis = temp[1];
+            *data3 = temp3;
             parsing = 0;  // Finaliza el parseo
-            // uartRXBuffer.rx_flag = 0; // reset rx_flag
             break;
         } else if (parsing) {
             // Procesa el contenido entre START_BYTE y STOP_BYTE
@@ -176,13 +177,14 @@ void UART_parseData(UART_RX_Buffer* buffer, uint8_t* data1, uint8_t* data2, uint
                         temp[1] = temp[1] * 10 + (byte - '0');
                         break;
                     case 2:
-                        temp[2] = temp[2] * 10 + (byte - '0');
+                        temp3 = temp3 * 10 + (byte - '0');
                         break;
                 }
             }
         }
     }
 }
+
 
 void UART_parseTXData(unsigned char *str, float TEMP, uint8_t calefactor){
     uint8_t temp_int = ((uint8_t) TEMP);
