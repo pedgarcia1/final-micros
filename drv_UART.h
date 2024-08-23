@@ -19,6 +19,7 @@
  ******************************************************************************/
 #define START_PERIODIC 1
 #define NO_PERIODIC 0
+#define BUFFER_SIZE 10
 #define START_BYTE 0x02
 #define STOP_BYTE 0x03
 
@@ -26,15 +27,23 @@
 /*******************************************************************************
  * ENUMERATIONS AND STRUCTURES AND TYPEDEFS
  ******************************************************************************/
-#define BUFFER_SIZE 128  // Tamaño del buffer circular
+<<<<<<< HEAD
+#define BUFFER_SIZE 128  // Tamaï¿½o del buffer circular
 
 typedef struct {
     uint8_t data[BUFFER_SIZE];  // Array para almacenar los datos recibidos
-    uint8_t head;               // Índice del próximo byte a escribir
-    uint8_t tail;               // Índice del próximo byte a leer
-    uint8_t count;              // Número de bytes en el buffer
-    uint8_t receiving;          // Bandera de estado de recepción
+    uint8_t head;               // ï¿½ndice del prï¿½ximo byte a escribir
+    uint8_t tail;               // ï¿½ndice del prï¿½ximo byte a leer
+    uint8_t count;              // Nï¿½mero de bytes en el buffer
+    uint8_t receiving;          // Bandera de estado de recepciï¿½n
     uint8_t rx_flag;            // Bandera para indicar que un paquete completo ha sido recibido
+=======
+typedef struct {
+    uint8_t data[BUFFER_SIZE];   // Array para almacenar los datos recibidos
+    uint8_t index;       // ï¿½ndice para rastrear la posiciÃ³n actual en el array
+    uint8_t receiving;   // Flag para indicar si se estÃ¡ recibiendo datos
+    uint8_t rx_flag;     // Flag para indicar que se recibieron datos
+>>>>>>> parent of ee40674 (uart con buffer circular, funciona)
 } UART_RX_Buffer;
 
 typedef struct {
@@ -105,8 +114,14 @@ void incrementUARTPeriod();
  * @brief Decrementa el periodo de trabajo de UART en 100 ms
 */
 void decrementUARTPeriod();
+<<<<<<< HEAD
 
 uint8_t UARTReadByte(void);
+
+void UART_parseTXData(unsigned char *str, float TEMP, uint8_t calefactor);
+
+=======
+>>>>>>> parent of ee40674 (uart con buffer circular, funciona)
 /*******************************************************************************
  ******************************************************************************/
 

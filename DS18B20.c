@@ -9,6 +9,11 @@
 #define TRUNC ((uint8_t) 0xFE)
 #define DELAY_US(DELAY)  __delay_cycles(8*DELAY);
 
+#define TEMP_9_BIT  0x1F //  9 bit
+#define TEMP_10_BIT 0x3F // 10 bit
+#define TEMP_11_BIT 0x5F // 11 bit
+#define TEMP_12_BIT 0x7F // 12 bit
+
 // --------------- PROTOTYPES --------------- //
 void    temp_writeByte(uint8_t byte);
 uint8_t temp_readByte(void);
@@ -27,6 +32,9 @@ void temp_Init(void){
 
     // Timer init
     send_to_isr(temp_ISR,1);
+
+    t_state = STANDBY; // Retry temperature read
+
 }
 
 
@@ -220,4 +228,38 @@ void temp_ISR(void){
                 count = 0;
             }
         }
+}
+
+uint8_t temp_SetResolution(uint8_t resolution)
+{
+
+    uint8_t RES;
+    uint8_t configByte = TEMP_12_BIT;
+    RES = temp_Reset();
+    if (RES)
+    {
+        temp_writeByte(SKIPROM);                 // Comando Skip ROM
+        temp_writeByte(WRITE_SCRATCHPAD);         // Comando Write Scratchpad
+        temp_writeByte(0x00);                     // TH register
+        temp_writeByte(0x00);                     // TL register
+        temp_writeByte(configByte); // Configurar resoluci�n
+    }
+    RES = temp_Reset();
+    if (RES)
+    {
+        temp_writeByte(SKIPROM); // Comando Skip ROM
+        temp_writeByte(READSCRATCHPAD);
+    }
+    uint8_t data[9];
+    uint8_t i = 0;
+    for(i=0; i<9; i++){
+        data[i] = temp_readByte();
+    }
+
+    if (data[4] == configByte)
+    {
+        return 1;
+    }
+
+    return 0;
 }
