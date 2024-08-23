@@ -19,7 +19,6 @@ void temp_ISR(void);
 enum DS1820_STATE t_state = STANDBY;    // STANDBY by default
 uint16_t count = 0; // PASAR A ISR
 
-
 // --------------- FUNCTIONS --------------- //
 void temp_Init(void){
     PIN_OUTPUT(ONE_WIRE);
@@ -27,6 +26,8 @@ void temp_Init(void){
 
     // Timer init
     send_to_isr(temp_ISR,1);
+
+    t_state = STANDBY;
 }
 
 
@@ -59,8 +60,6 @@ uint8_t temp_Reset(void){
         return 0;
     }
     */
-
-    t_state = STANDBY;
 }
 
 void temp_writeByte(uint8_t byte){
@@ -220,4 +219,12 @@ void temp_ISR(void){
                 count = 0;
             }
         }
+}
+
+void temp_SetResolution(uint8_t resolution) {
+    temp_writeByte(SKIPROM);                   // Comando Skip ROM
+    temp_writeByte(WRITE_SCRATCHPAD);           // Comando Write Scratchpad
+    temp_writeByte(0x00);                       // TH register
+    temp_writeByte(0x00);                       // TL register
+    temp_writeByte(resolution);   // Configurar resolución
 }

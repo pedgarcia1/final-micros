@@ -103,6 +103,7 @@ void AppRun(void)
         break;
     case READING_ERROR:
         // Do nothing
+        break;
     default:
         break;
     }
