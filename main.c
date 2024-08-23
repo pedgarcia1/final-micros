@@ -97,11 +97,7 @@ void AppRun(void)
         }
         break;
     case READING_ERROR:
-        presence = temp_Reset();
-        if (presence)
-        {
-            TEMP = temp_ReadTemperature(); // Set t_state to STANDBY
-        }
+        // Do nothing
     default:
         break;
     }
@@ -110,17 +106,11 @@ void AppRun(void)
     if(led != 0 && temp_CheckState() == STANDBY && TEMP != 85.0){
         updateLedBar(led);
 
-        temp_int = ((uint8_t) TEMP);
         unsigned char str[8];
-        str[0] = temp_int / 10 + '0'; // primer digito
-        str[1] = temp_int % 10 + '0'; // segundo digito
-        str[2] = '.'; // punto decimal
-        str[3] = (int) (TEMP * 10) % 10 + '0';  // primer decimal
-        str[4] = (int) (TEMP * 100) % 10 + '0'; // segundo decimal
-        str[5] = ','; // coma
-        str[6] = calefactor + '0'; // estado del calefactor calefactor
-        str[7] = '\n';
+        UART_parseTXData(str,TEMP,calefactor);
         UARTSendArray(str, 8);
+
+        temp_int = ((int) TEMP);
     }
 
     if(UART_connection()){
@@ -158,22 +148,3 @@ void AppRun(void)
                         LOCAL FUNCTION DEFINITIONS
  *******************************************************************************
  ******************************************************************************/
-
-// PASAR A ISR @TEO :) <3
-// ISR del Watchdog Timer
-/*
-#pragma vector = WDT_VECTOR
-__interrupt void WDT_ISR(void)
-{
-    // 1 interrupcion de timer cada 0.5ms
-    if (temp_CheckState() == CONVERTING_T)
-    {
-        count++;
-        if (count >= 1000 * 2) // 1 interrupcion de timer cada 0.5ms
-        {
-            temp_SetState(CONVERSION_DONE);
-            count = 0;
-        }
-    }
-}
-*/

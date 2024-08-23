@@ -107,6 +107,8 @@ void incrementUARTPeriod();
 void decrementUARTPeriod();
 
 uint8_t UARTReadByte(void);
+
+void UART_parseTXData(unsigned char *str, float TEMP, uint8_t calefactor);
 /*******************************************************************************
  ******************************************************************************/
 

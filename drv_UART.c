@@ -89,12 +89,6 @@ void UARTSendArray(unsigned char *TxArray, unsigned char ArrayLength){
 
     UC0IE |= UCA0TXIE;  // Enable USCI_A0 TX interrupt
     }
-    /*
-while(ArrayLength--){ // Loop until StringLength == 0 and post decrement
-    while(!(IFG2 & UCA0TXIFG)); // Wait for TX buffer to be ready for new data
-    UCA0TXBUF = *TxArray; //Write the character at the location specified py the pointer
-    TxArray++; //Increment the TxString pointer to point to the next character
- } */
 }
 
 UART_RX_Buffer* UART_getBuffer(void) {
@@ -188,6 +182,18 @@ void UART_parseData(UART_RX_Buffer* buffer, uint8_t* data1, uint8_t* data2, uint
             }
         }
     }
+}
+
+void UART_parseTXData(unsigned char *str, float TEMP, uint8_t calefactor){
+    uint8_t temp_int = ((uint8_t) TEMP);
+    str[0] = temp_int / 10 + '0'; // primer digito
+    str[1] = temp_int % 10 + '0'; // segundo digito
+    str[2] = '.'; // punto decimal
+    str[3] = (int) (TEMP * 10) % 10 + '0';  // primer decimal
+    str[4] = (int) (TEMP * 100) % 10 + '0'; // segundo decimal
+    str[5] = ','; // coma
+    str[6] = calefactor + '0'; // estado del calefactor calefactor
+    str[7] = '\n';
 }
 
 
