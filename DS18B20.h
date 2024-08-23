@@ -17,8 +17,7 @@
 #define READSCRATCHPAD      0xBE
 #define CONVERTTEMP         0x44
 #define READ_POWER_SUPPLY   0xB4
-#define WRITE_SCRATCHPAD    0x4E
-#define COPY_SCRATCHPAD     0x48
+
 
 // Sensor state machine enum
 enum DS1820_STATE {
@@ -37,6 +36,5 @@ float   temp_ReadTemperature(void);
 uint8_t temp_CheckPower(void);
 void    temp_SetState(enum DS1820_STATE state);
 uint8_t temp_CheckState(void);
-uint8_t temp_SetResolution(uint8_t resolution);
 
 #endif // _DS18B20_H_

@@ -22,13 +22,8 @@
 /*******************************************************************************
  * ENUMERATIONS AND STRUCTURES AND TYPEDEFS
  ******************************************************************************/
-<<<<<<< HEAD
 UART_RX_Buffer uartRXBuffer = { .head = 0, .tail = 0, .count = 0, .receiving = 0, .rx_flag = 0 };
-UART_TX_Buffer uartTXBuffer = {NULL, 0, 0};  // Buffer de transmisiï¿½n inicializado
-=======
-UART_RX_Buffer uartRXBuffer = {{0}, 0, 0, 0};  // Buffer de recepcion inicializado
 UART_TX_Buffer uartTXBuffer = {NULL, 0, 0};  // Buffer de transmisión inicializado
->>>>>>> parent of ee40674 (uart con buffer circular, funciona)
 
 /*******************************************************************************
  * VARIABLES WITH GLOBAL SCOPE
@@ -94,6 +89,12 @@ void UARTSendArray(unsigned char *TxArray, unsigned char ArrayLength){
 
     UC0IE |= UCA0TXIE;  // Enable USCI_A0 TX interrupt
     }
+    /*
+while(ArrayLength--){ // Loop until StringLength == 0 and post decrement
+    while(!(IFG2 & UCA0TXIFG)); // Wait for TX buffer to be ready for new data
+    UCA0TXBUF = *TxArray; //Write the character at the location specified py the pointer
+    TxArray++; //Increment the TxString pointer to point to the next character
+ } */
 }
 
 UART_RX_Buffer* UART_getBuffer(void) {
@@ -144,15 +145,15 @@ void decrementUARTPeriod(){
 }
 
 void UART_parseData(UART_RX_Buffer* buffer, uint8_t* data1, uint8_t* data2, uint8_t* data3) {
-    uint8_t index = 0;
-    uint8_t comma_count = 0;
     uint8_t temp[3] = {0, 0, 0};  // Temporal para almacenar los tres valores
+    uint8_t comma_count = 0;
+    uint8_t byte;
+    uint8_t parsing = 0;
 
-<<<<<<< HEAD
     // Procesa el buffer circular desde `tail` hasta `head`
     while ((buffer->tail != buffer->head) && (buffer->receiving == 0)) {
         byte = buffer->data[buffer->tail];  // Lee el byte actual
-        buffer->tail = (buffer->tail + 1) % BUFFER_SIZE;  // Avanza el ï¿½ndice `tail` de manera circular
+        buffer->tail = (buffer->tail + 1) % BUFFER_SIZE;  // Avanza el índice `tail` de manera circular
 
         if (byte == START_BYTE) {
             // Reinicia el proceso si se detecta un nuevo START_BYTE
@@ -172,7 +173,7 @@ void UART_parseData(UART_RX_Buffer* buffer, uint8_t* data1, uint8_t* data2, uint
             if (byte == ',') {
                 comma_count++;
             } else {
-                // Llena el valor correspondiente segï¿½n el nï¿½mero de comas encontradas
+                // Llena el valor correspondiente según el número de comas encontradas
                 switch (comma_count) {
                     case 0:
                         temp[0] = temp[0] * 10 + (byte - '0');
@@ -184,61 +185,27 @@ void UART_parseData(UART_RX_Buffer* buffer, uint8_t* data1, uint8_t* data2, uint
                         temp[2] = temp[2] * 10 + (byte - '0');
                         break;
                 }
-=======
-    for (index = 0; index < buffer->index; index++) {
-        if (buffer->data[index] == ',') {
-            comma_count++;
-        } else {
-            switch (comma_count) {
-                case 0:
-                    temp[0] = temp[0] * 10 + (buffer->data[index] - '0');
-                    break;
-                case 1:
-                    temp[1] = temp[1] * 10 + (buffer->data[index] - '0');
-                    break;
-                case 2:
-                    temp[2] = temp[2] * 10 + (buffer->data[index] - '0');
-                    break;
->>>>>>> parent of ee40674 (uart con buffer circular, funciona)
             }
         }
     }
-
-    // Asignar los valores a las variables de salida
-    *data1 = temp[0];
-    *data2 = temp[1];
-    *data3 = temp[2];
 }
 
 
-<<<<<<< HEAD
 
 uint8_t UARTReadByte(void) {
     uint8_t data = 0;
 
     if (uartRXBuffer.count > 0) {
         data = uartRXBuffer.data[uartRXBuffer.tail];
-        uartRXBuffer.tail = (uartRXBuffer.tail + 1) % BUFFER_SIZE;  // Incrementa el indice de cola de manera circular
+        uartRXBuffer.tail = (uartRXBuffer.tail + 1) % BUFFER_SIZE;  // Incrementa el índice de cola de manera circular
         uartRXBuffer.count--;  // Decrementa el contador de bytes disponibles
     }
 
     return data;
 }
 
-void UART_parseTXData(unsigned char *str, float TEMP, uint8_t calefactor){
-    uint8_t temp_int = ((uint8_t)TEMP);
-    str[0] = temp_int / 10 + '0';          // primer digito
-    str[1] = temp_int % 10 + '0';          // segundo digito
-    str[2] = '.';                          // punto decimal
-    str[3] = (int)(TEMP * 10) % 10 + '0';  // primer decimal
-    str[4] = (int)(TEMP * 100) % 10 + '0'; // segundo decimal
-    str[5] = ',';                          // coma
-    str[6] = calefactor + '0';             // estado del calefactor calefactor
-    str[7] = '\n';
-}
 
-=======
->>>>>>> parent of ee40674 (uart con buffer circular, funciona)
+
 /*******************************************************************************
  *******************************************************************************
                         LOCAL FUNCTION DEFINITIONS
@@ -257,67 +224,36 @@ void UART_parseTXData(unsigned char *str, float TEMP, uint8_t calefactor){
 #pragma vector = USCIAB0RX_VECTOR
 __interrupt void USCI0RX_ISR(void)
 {
-    // RXFlag = 1;
     uint8_t rxdata;
     if (IFG2 & UCA0RXIFG) { // Chequea si hay datos recibidos
         rxdata = UCA0RXBUF; // Lee el byte recibido
-        if (!uartRXBuffer.receiving && rxdata == START_BYTE) { // Si el primer byte es el de inicio comienza la recepcion
-            uartRXBuffer.receiving = 1;
-            uartRXBuffer.index = 0;  // Reinicia el Ã­ndice
-        } else if (uartRXBuffer.receiving) {
-            uartRXBuffer.data[uartRXBuffer.index++] = rxdata;
 
-<<<<<<< HEAD
         if (!uartRXBuffer.receiving && rxdata == START_BYTE) {
-            uartRXBuffer.receiving = 1; // Comienza la recepciï¿½n si el byte inicial es el de inicio
+            uartRXBuffer.receiving = 1; // Comienza la recepción si el byte inicial es el de inicio
         }
 
         if (uartRXBuffer.receiving) {
             // Guarda el byte recibido en el buffer circular
             uartRXBuffer.data[uartRXBuffer.head] = rxdata;
-            uartRXBuffer.head = (uartRXBuffer.head + 1) % BUFFER_SIZE;  // Incrementa el ï¿½ndice de cabeza de manera circular
+            uartRXBuffer.head = (uartRXBuffer.head + 1) % BUFFER_SIZE;  // Incrementa el índice de cabeza de manera circular
             uartRXBuffer.count++;
 
             if (rxdata == STOP_BYTE) {  // Si se recibe el byte de fin de paquete
-                uartRXBuffer.receiving = 0; // Finaliza la recepciï¿½n
+                uartRXBuffer.receiving = 0; // Finaliza la recepción
                 uartRXBuffer.rx_flag = 1;  // Indica que se ha recibido un paquete completo
             }
 
             if (uartRXBuffer.count >= BUFFER_SIZE) {  // Manejo de overflow
-                // Aquï¿½ podrï¿½as implementar lï¿½gica de manejo de overflow si es necesario
-                // Por ejemplo, podrï¿½as descartar el dato mï¿½s antiguo, ignorar el nuevo, etc.
-                // En este caso, simplemente sobrescribimos el dato mï¿½s antiguo.
-                uartRXBuffer.tail = (uartRXBuffer.tail + 1) % BUFFER_SIZE;  // Descartamos el byte mï¿½s antiguo
+                // Aquí podrías implementar lógica de manejo de overflow si es necesario
+                // Por ejemplo, podrías descartar el dato más antiguo, ignorar el nuevo, etc.
+                // En este caso, simplemente sobrescribimos el dato más antiguo.
+                uartRXBuffer.tail = (uartRXBuffer.tail + 1) % BUFFER_SIZE;  // Descartamos el byte más antiguo
                 uartRXBuffer.count--;  // Mantenemos el conteo de bytes correcto
-=======
-            if (rxdata == STOP_BYTE) {
-                /* if (uartRXBuffer.index >= 2 && uartRXBuffer.data[uartRXBuffer.index - 2] == STOP_BYTE) {
-                    uint8_t sum = checksum(uartRXBuffer.data, uartRXBuffer.index - 3);
-                    uartRXBuffer.receiving = 0;
-                    if (sum == uartRXBuffer.data[uartRXBuffer.index - 3]) { // Datos recibidos correctamente
-                        uartRXBuffer.rx_flag = 1;  // Indica que la recepciÃ³n ha terminado
-                    } else { // Error en los datos recibidos
-                        uartRXBuffer.index = 0;
-                    }
-                } */
-               // Por ahora, asumo que los datos llegan correctamente implementar checksum
-                uartRXBuffer.receiving = 0;
-                uartRXBuffer.rx_flag = 1;
-                uartRXBuffer.index--; // IMPORTANTE
-
-            /* } else if (uartRXBuffer.index >= sizeof(uartRXBuffer.data)) {
-                // Buffer overflow, resetear
-                uartRXBuffer.receiving = 0;
-                uartRXBuffer.index = 0;
-            }
-            */
-            // Idem, asumo que no hay overflow, implementar
->>>>>>> parent of ee40674 (uart con buffer circular, funciona)
             }
         }
     }
-
 }
+
 
 /**
  * @brief Interrupt BUFFER TX
@@ -326,7 +262,7 @@ __interrupt void USCI0RX_ISR(void)
 __interrupt void USCI0TX_ISR(void)
 {
     if (uartTXBuffer.length > 0) {
-            // Envï¿½a el siguiente byte desde el buffer
+            // Envía el siguiente byte desde el buffer
             UCA0TXBUF = *uartTXBuffer.str;
 
             // Avanza el puntero y decrementa la longitud
@@ -336,14 +272,6 @@ __interrupt void USCI0TX_ISR(void)
             uartTXBuffer.transmiting = 0;
             UC0IE &= ~UCA0TXIE; // Disable USCI_A0 TX interrupt
         }
-  /* UCA0TXBUF = string1[i++];                 // TX next character
-  P1OUT |= BIT6;
-  while (!(IFG2&UCA0TXIFG));
-  _delay_cycles(20);
-  P1OUT &= ~BIT6;
-  if (i == sizeof string1 - 1)              // TX over?
-    IE2 &= ~UCA0TXIE;                       // Disable USCI_A0 TX interrupt
-    */
 }
 
 /******************************************************************************/

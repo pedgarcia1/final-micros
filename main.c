@@ -39,7 +39,6 @@ void AppRun(void);
  * STATIC VARIABLES AND CONST VARIABLES WITH FILE LEVEL SCOPE
  ******************************************************************************/
 static const uint8_t power = 0; // 0 parasite power, 1 external power supply (Vdd)
-static const uint8_t resolution = 0x00; // 8-bit resolution
 uint8_t setpoint, histeresis, intMuestreo, temp_int;
 uint8_t calefactor = 0;
 
@@ -72,13 +71,11 @@ void AppInit(void)
     UART_init(NO_PERIODIC);
     PWM_Init();
     statusLed_init();
-    uint8_t resolution_ok_flag, flag_old;
-    resolution_ok_flag = temp_SetResolution(resolution);
-    flag_old = resolution_ok_flag - 1;
 }
 
 void AppRun(void)
 {
+
     // Loop (se ejecuta constantemente en un ciclo infinito)
     uint8_t presence = 0;
     float TEMP = 0;
@@ -100,17 +97,29 @@ void AppRun(void)
         }
         break;
     case READING_ERROR:
-        // Do nothing
+        presence = temp_Reset();
+        if (presence)
+        {
+            TEMP = temp_ReadTemperature(); // Set t_state to STANDBY
+        }
     default:
         break;
     }
 
-    if(TEMP != 0 && temp_CheckState() == STANDBY && TEMP != 85.0){
-        int led = (int) (0.8*TEMP-15.0);
+    int led = (int) (0.8*TEMP-15.0);
+    if(led != 0 && temp_CheckState() == STANDBY && TEMP != 85.0){
         updateLedBar(led);
 
+        temp_int = ((uint8_t) TEMP);
         unsigned char str[8];
-        UART_parseTXData(str, TEMP, calefactor);
+        str[0] = temp_int / 10 + '0'; // primer digito
+        str[1] = temp_int % 10 + '0'; // segundo digito
+        str[2] = '.'; // punto decimal
+        str[3] = (int) (TEMP * 10) % 10 + '0';  // primer decimal
+        str[4] = (int) (TEMP * 100) % 10 + '0'; // segundo decimal
+        str[5] = ','; // coma
+        str[6] = calefactor + '0'; // estado del calefactor calefactor
+        str[7] = '\n';
         UARTSendArray(str, 8);
     }
 
@@ -122,17 +131,16 @@ void AppRun(void)
     }else{
         statusLed_setState(ERROR);
 
-<<<<<<< HEAD
+
     }
 
-=======
-        setpoint = 30;
-        histeresis = 2;
-        intMuestreo = 0;
+    uint8_t setpoint_anterior = setpoint;
+    if(setpoint_anterior != setpoint){
+        uint8_t guardar;
+        guardar = setpoint - 1;
     }
 
 
->>>>>>> parent of ee40674 (uart con buffer circular, funciona)
     if(temp_int > setpoint + histeresis){
         PWM_setDC(10);
         calefactor = 0; // OFF
@@ -150,3 +158,22 @@ void AppRun(void)
                         LOCAL FUNCTION DEFINITIONS
  *******************************************************************************
  ******************************************************************************/
+
+// PASAR A ISR @TEO :) <3
+// ISR del Watchdog Timer
+/*
+#pragma vector = WDT_VECTOR
+__interrupt void WDT_ISR(void)
+{
+    // 1 interrupcion de timer cada 0.5ms
+    if (temp_CheckState() == CONVERTING_T)
+    {
+        count++;
+        if (count >= 1000 * 2) // 1 interrupcion de timer cada 0.5ms
+        {
+            temp_SetState(CONVERSION_DONE);
+            count = 0;
+        }
+    }
+}
+*/
