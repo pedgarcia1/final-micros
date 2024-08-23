@@ -149,7 +149,7 @@ float temp_ReadTemperature(void){
         t_state = STANDBY; // Retry temperature read
     }else{
         TEMP = -1.0;
-        t_state = READING_ERROR; // Retry temperature read
+        t_state = STANDBY; // Retry temperature read
     }
 
     return TEMP;

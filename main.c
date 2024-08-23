@@ -71,6 +71,11 @@ void AppInit(void)
     UART_init(NO_PERIODIC);
     PWM_Init();
     statusLed_init();
+
+    // Valores para debug
+    setpoint = 30;
+    histeresis = 1;
+    intMuestreo = 1;
 }
 
 void AppRun(void)
@@ -103,7 +108,7 @@ void AppRun(void)
     }
 
     int led = (int) (0.8*TEMP-15.0);
-    if(led != 0 && temp_CheckState() == STANDBY && TEMP != 85.0){
+    if(led != 0 && temp_CheckState() == STANDBY && TEMP != 85.0 && TEMP != -1.0){
         updateLedBar(led);
 
         unsigned char str[8];
