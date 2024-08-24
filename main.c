@@ -72,7 +72,7 @@ void AppInit(void)
     UART_init(NO_PERIODIC);
     PWM_Init();
     statusLed_init();
-    // temp_SetResolution(TEMP_9_BIT);
+    // temp_SetResolution(TEMP_9_BIT); NO FUNCIONA, BORRAR O PROBAR CON EL DS18B20
 
     // Valores para debug
     setpoint = 30;

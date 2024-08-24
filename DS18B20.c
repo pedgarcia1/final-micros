@@ -197,13 +197,42 @@ void temp_isr(void){
     remove_from_isr(temp_isr);
 }
 
-void temp_SetResolution(uint8_t resolution) {
-    temp_writeByte(SKIPROM);                   // Comando Skip ROM
-    temp_writeByte(WRITE_SCRATCHPAD);           // Comando Write Scratchpad
-    temp_writeByte(0x00);                       // TH register
-    temp_writeByte(0x00);                       // TL register
-    temp_writeByte(resolution);   // Configurar resoluciï¿½n
+void temp_SetResolution(uint8_t resolution)
+{
+    uint8_t res;
+    res = temp_Reset();
+    if (res)
+    {
+        temp_writeByte(SKIPROM);          // Comando Skip ROM
+        temp_writeByte(WRITE_SCRATCHPAD); // Comando Write Scratchpad
+        temp_writeByte(0x00);             // TH register
+        temp_writeByte(0x00);             // TL register
+        temp_writeByte((resolution & 0x03) << 5 | 0x1F); // Configurar resolución
+        res = temp_Reset();
+        if(res){
+            temp_writeByte(SKIPROM);          // Comando Skip ROM
+            temp_writeByte(0x48);             // Comando Copy Scratchpad
+            PIN_OUTPUT(ONE_WIRE);
+            DIGITAL_WRITE(ONE_WIRE, HIGH);
+            // DELAY_US(11000);  // Aumentar el tiempo de retención a 10ms
+            __delay_cycles(95000);
+            res = temp_Reset();
+            if(res){
+
+                uint8_t data[9];
+
+                    temp_writeByte(SKIPROM);
+                    temp_writeByte(READSCRATCHPAD);
+
+                    uint8_t i = 0;
+                    for(i=0; i<9; i++){
+                        data[i] = temp_readByte();
+                    }
+            }
+        }
+    }
 }
+
 
 // value: nuevo tiempo de muestreo en ms
 void temp_setTMuestreo(uint16_t value){
