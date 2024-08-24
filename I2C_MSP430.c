@@ -131,13 +131,13 @@ void I2C_switchSlave(uint8_t slaveAddr) {
 uint8_t I2C_writeData(uint8_t* data, uint8_t length) {
     I2C_start(TRANSMIT);                        // Generate start condition
     
-    uint16_t retryCount = 0;
+    uint8_t retryCount = 0;
 
     for (uint8_t i = 0; i < length; i++) {
         I2C_writeByte(data[i]);    // Generate stop condition
 
                      
-        if ((UCB0STAT & UCNACKIFG) && retryCount < 0xFFFF ) {  // Check for NACK
+        if ((UCB0STAT & UCNACKIFG) && retryCount < 0xFF ) {  // Check for NACK
             UCB0STAT &= ~UCNACKIFG;  // Clear NACK flag
             I2C_start(TRANSMIT);                // Generate start condition again
             i--;  // Repeat current byte
@@ -157,8 +157,8 @@ uint8_t I2C_readData(uint8_t slaveAddr, uint8_t* data, uint8_t length) {
     
     if (UCB0STAT & UCNACKIFG) {             // Check for NACK
         UCB0STAT &= ~UCNACKIFG;             // Clear NACK flag
-        uint16_t retryCounter = 0;
-        while (retryCounter < 0xFFFF) {
+        uint8_t retryCounter = 0;
+        while (retryCounter < 0xFF) {
             I2C_start(RECEIVE);             // Generate start condition again
             if (!(UCB0STAT & UCNACKIFG)) {   // Check for NACK
                 break;
@@ -172,8 +172,8 @@ uint8_t I2C_readData(uint8_t slaveAddr, uint8_t* data, uint8_t length) {
         
 
     }
-    I2C_start(RECEIVE);                            // Generate repeated start condition
-    I2C_writeByte((slaveAddr << 1) | 0x01); // Send slave address with read bit
+    // I2C_writeByte((slaveAddr << 1) | 0x01); // Send slave address with read bit (lo hace solo)
+    
     for (uint8_t i = 0; i < length - 1; i++) {
         data[i] = I2C_readByte();           // Read data byte
     }
