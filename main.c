@@ -38,7 +38,7 @@ void AppRun(void);
 /*******************************************************************************
  * STATIC VARIABLES AND CONST VARIABLES WITH FILE LEVEL SCOPE
  ******************************************************************************/
-static const uint8_t power = 0; // 0 parasite power, 1 external power supply (Vdd)
+static const uint8_t power = 1; // 0 parasite power, 1 external power supply (Vdd)
 uint8_t setpoint, histeresis, temp_int;
 uint16_t intMuestreo;
 uint8_t calefactor = 0;
