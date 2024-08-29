@@ -45,6 +45,7 @@ unsigned char set_led(unsigned int i);
 */
 void ledBarInit() {
     shiftRegisterInit();
+    updateLedBar(0);
 }
 
 /**

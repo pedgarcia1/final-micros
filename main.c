@@ -43,6 +43,10 @@ uint8_t setpoint, histeresis, temp_int;
 uint16_t intMuestreo;
 uint8_t calefactor = 0;
 
+#define MAX_TEMP    60.0
+#define MIN_TEMP    20.0
+#define LED_MAX     8.0
+
 /*******************************************************************************
  *******************************************************************************
                         GLOBAL FUNCTION DEFINITIONS
@@ -110,7 +114,7 @@ void AppRun(void)
         break;
     }
 
-    int led = (int) (0.8*TEMP-15.0);
+    int led = (int) (LED_MAX/(MAX_TEMP - MIN_TEMP) *( TEMP - MIN_TEMP));
     if(led != 0 && temp_CheckState() == STANDBY && TEMP != 85.0 && TEMP != -1.0){
         updateLedBar(led);
 
