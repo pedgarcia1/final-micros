@@ -75,7 +75,7 @@ void AppRun(void)
                     PIN_SEL2(I2C_SDA, HIGH);
                 }
 
-        /*    // Transmit mode
+            // Transmit mode
             UCB0CTL1 |= UCTR;
 
 
@@ -91,15 +91,15 @@ void AppRun(void)
            while(!(IFG2 & UCB0TXIFG));
 
 
-           UCB0TXBUF = 0x55;
+           UCB0TXBUF = 0xFA;
            while(!(IFG2 & UCB0TXIFG));
 
 
            UCB0CTL1 |= UCTXSTP;
            while(UCB0CTL1 & UCTXSTP);
 
-           __delay_cycles(1000000);
-*/
+           __delay_cycles(8000000);
+
            UCB0CTL1 |= UCTR;
            UCB0CTL1 |= UCTXSTT;
            UCB0TXBUF = 0x1;
