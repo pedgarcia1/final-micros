@@ -13,6 +13,7 @@ void AppRun(void);
 #define I2C_SCL     1,6
 #define I2C_SDA     1,7
 
+int otra = 0;
 
 void main(void)
 {
@@ -74,7 +75,7 @@ void AppRun(void)
                     PIN_SEL2(I2C_SDA, HIGH);
                 }
 
-            // Transmit mode
+        /*    // Transmit mode
             UCB0CTL1 |= UCTR;
 
 
@@ -96,15 +97,16 @@ void AppRun(void)
 
            UCB0CTL1 |= UCTXSTP;
            while(UCB0CTL1 & UCTXSTP);
-/*
-         //  __delay_cycles(10000);
 
+           __delay_cycles(1000000);
+*/
            UCB0CTL1 |= UCTR;
            UCB0CTL1 |= UCTXSTT;
+           UCB0TXBUF = 0x1;
            while (UCB0CTL1 & UCTXSTT);
 
 
-           UCB0TXBUF = 0x1;
+           //UCB0TXBUF = 0x1;
          while(!(IFG2 & UCB0TXIFG));
 
          UCB0TXBUF = 0x4;
@@ -116,6 +118,7 @@ void AppRun(void)
          UCB0CTL1 &= ~UCTR;
 
          UCB0CTL1 |= UCTXSTT;    // I2C start condition
+
          while (UCB0CTL1 & UCTXSTT);
 
          UCB0CTL1 |= UCTXSTP;
@@ -124,10 +127,9 @@ void AppRun(void)
          while(!(IFG2 & UCB0RXIFG));
          leido = UCB0RXBUF;
          debug = leido-1;
+         otra = leido;
 
          while(UCB0CTL1 & UCTXSTP);
-
-         */
     /*
      *
     uint8_t dato = 0x55;
