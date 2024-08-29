@@ -62,7 +62,7 @@ void EEPROM_writeData(uint16_t address, uint8_t* data, uint8_t length) {
     uint8_t addrHigh = (address >> 8) & 0xFF;
     uint8_t addrLow = address & 0xFF;
 
-    uint8_t writeData[3] = {addrHigh, addrLow, data};
+    uint8_t writeData[3] = {addrHigh, addrLow, *data};
     I2C_writeData(writeData, 3);
 
     // Wait for write cycle to complete

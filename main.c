@@ -27,7 +27,7 @@ void main(void)
 void AppInit(void)
 {
     // Inicializaciones
-    EEPROM_Init();
+    EEPROM_init();
 }
 
 void AppRun(void)
@@ -37,9 +37,9 @@ void AppRun(void)
 
     EEPROM_writeData(100, &dato, 1);
 
-    uint8_t dato_leído;
+    uint8_t dato_leido;
 
-    EEPROM_readData(100, &dato_leído, 1);
+    EEPROM_readData(100, &dato_leido, 1);
 
     __delay_cycles(1000000);
 
