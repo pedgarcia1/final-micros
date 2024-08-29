@@ -13,7 +13,7 @@
 /*******************************************************************************
  * INCLUDE HEADER FILES
  ******************************************************************************/
-
+#include <stdint.h>
 
 /*******************************************************************************
  * CONSTANT AND MACRO DEFINITIONS USING #DEFINE
@@ -50,7 +50,7 @@ uint8_t I2C_writeData(uint8_t* data, uint8_t length);
  * @param length: Number of bytes to be read
  * @return: 0 if success, 1 if error
 */
-u_int8_t I2C_readData(uint8_t* data, uint8_t length);
+uint8_t I2C_readData(uint8_t* data, uint8_t length);
 
 /**
  * @brief: Switches the I2C slave address

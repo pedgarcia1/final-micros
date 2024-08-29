@@ -106,21 +106,25 @@ unpredictable behavior. Setting UCSWRST in I C mode has the following effects:
 // I2C initialization function
 void I2C_init() {
     // Configure I2C pins
-    P1SEL   |= I2C_SCL_PIN + I2C_SDA_PIN;     // Select I2C function for these pins
-    P1SEL2  |= I2C_SCL_PIN + I2C_SDA_PIN;    
+    //P1SEL   |= I2C_SCL_PIN + I2C_SDA_PIN;     // Select I2C function for these pins
+    //P1SEL2  |= I2C_SCL_PIN + I2C_SDA_PIN;
     //P1REN   |= I2C_SCL_PIN + I2C_SDA_PIN;     // Enable pull-up resistor. Not sure if done by code or hardware (creo que se hace por hardware)
+
+    P1SEL |= BIT6 + BIT7;                   // Configurar funciones alternativas para I2C
+    P1SEL2 |= BIT6 + BIT7;
 
     // Configure I2C module
     UCB0CTL1 |= UCSWRST;                    // Enable software reset
-    UCB0CTL0 = UCMST + UCMODE_3 + UCSYNC + ~UCSLA10;   // Master mode, I2C mode, synchronous mode, 7-bit slave address
-    UCB0CTL1 = UCSSEL_2 + UCSWRST;          // SMCLK, keep in reset state
-    UCB0BR0 = 10;                           // Set clock divider for desired SCL frequency (100 kHz)
+    UCB0CTL0 = UCMST + UCMODE_3 + UCSYNC;   // Master mode, I2C mode, synchronous mode, 7-bit slave address
+    UCB0BR0 = 80;                           // Set clock divider for desired SCL frequency (100 kHz)
     UCB0BR1 = 0;   
+    UCB0CTL1 = UCSSEL_2;          // SMCLK, keep in reset state
     // The 16-bit value of (UCBxBR0 + UCBxBR1 × 256) forms the prescaler value. (ahora esta puesto en 80)
 
     //UCB0I2CSA = slaveAddr;                  // Set slave address
-    UCB0CTL1 &= ~UCSWRST;                   // Release software reset
-    IE2 |= UCB0TXIE + UCB0RXIE;             // Enable transmit and receive interrupts
+    // UCB0CTL1 &= ~UCSWRST;                   // Release software reset
+    // IE2 |= UCB0TXIE + UCB0RXIE;             // Enable transmit and receive interrupts
+    // Pedro: No activar interrupts sin definir pragma vector correspondiente, RIP uC si no.
 
 }
 void I2C_switchSlave(uint8_t slaveAddr) {
