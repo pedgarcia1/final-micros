@@ -76,6 +76,7 @@ void AppInit(void)
     UART_init(NO_PERIODIC);
     PWM_Init();
     statusLed_init();
+    EEPROM_init();
     // temp_SetResolution(TEMP_9_BIT); NO FUNCIONA, BORRAR O PROBAR CON EL DS18B20
 
     // Valores para debug
@@ -125,17 +126,21 @@ void AppRun(void)
         temp_int = ((int) TEMP);
     }
 
-    if(UART_connection()){
-        statusLed_setState(NORMAL);
+    // if(UART_connection()){
+    //     statusLed_setState(NORMAL);
 
-        UART_RX_Buffer* rxBufferPointer = UART_getBuffer();
-        UART_parseData(rxBufferPointer, &setpoint, &histeresis, &intMuestreo);
-        temp_setTMuestreo(intMuestreo);
-    }else{
-        statusLed_setState(ERROR);
+    //     UART_RX_Buffer* rxBufferPointer = UART_getBuffer();
+    //     UART_parseData(rxBufferPointer, &setpoint, &histeresis, &intMuestreo);
+    //     temp_setTMuestreo(intMuestreo);
+    // }else{
+    //     statusLed_setState(ERROR);
 
 
-    }
+    // }
+    uint8_t lecturaEEPROM;
+    uint8_t debugEEPROM;
+    EEPROM_readData(0, &lecturaEEPROM, 1);
+    debugEEPROM = lecturaEEPROM -1;
 
     uint8_t setpoint_anterior = setpoint;
     if(setpoint_anterior != setpoint){

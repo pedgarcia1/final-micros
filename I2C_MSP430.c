@@ -14,7 +14,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include <msp430.h>
+#include <msp430g2553.h>
 
 /*******************************************************************************
  * CONSTANT AND MACRO DEFINITIONS USING #DEFINE
@@ -114,7 +114,7 @@ void I2C_init() {
     UCB0CTL1 |= UCSWRST;                    // Enable software reset
     UCB0CTL0 = UCMST + UCMODE_3 + UCSYNC + ~UCSLA10;   // Master mode, I2C mode, synchronous mode, 7-bit slave address
     UCB0CTL1 = UCSSEL_2 + UCSWRST;          // SMCLK, keep in reset state
-    UCB0BR0 = 80;                           // Set clock divider for desired SCL frequency (100 kHz)
+    UCB0BR0 = 10;                           // Set clock divider for desired SCL frequency (100 kHz)
     UCB0BR1 = 0;   
     // The 16-bit value of (UCBxBR0 + UCBxBR1 × 256) forms the prescaler value. (ahora esta puesto en 80)
 
@@ -152,7 +152,7 @@ uint8_t I2C_writeData(uint8_t* data, uint8_t length) {
 }
 
 // I2C read data function
-uint8_t I2C_readData(uint8_t slaveAddr, uint8_t* data, uint8_t length) {
+uint8_t I2C_readData(uint8_t* data, uint8_t length) {
     I2C_start(RECEIVE);                     // Generate start condition
     
     if (UCB0STAT & UCNACKIFG) {             // Check for NACK
