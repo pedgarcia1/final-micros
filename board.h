@@ -27,7 +27,7 @@
 // Shift register
 #define DATA PORTNUM2PIN(1,4)
 #define LATCH PORTNUM2PIN(1,5)
-#define CLOCK PORTNUM2PIN(1,6)
+#define CLOCK PORTNUM2PIN(1,3)
 
 // PWM Pin
 #define PWM_PIN BIT2 // P2.2
