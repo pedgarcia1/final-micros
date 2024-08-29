@@ -113,10 +113,10 @@ void I2C_init() {
     // Configure I2C module
     UCB0CTL1 |= UCSWRST;                    // Enable software reset
     UCB0CTL0 = UCMST + UCMODE_3 + UCSYNC;   // Master mode, I2C mode, synchronous mode, 7-bit slave address
-    UCB0CTL1 = UCSSEL_2;          // SMCLK, remove reset
-    UCB0BR0 = 80;                           // Set clock divider for desired SCL frequency (100 kHz)
+    UCB0BR0 = 10;                           // Set clock divider for desired SCL frequency (100 kHz)
     UCB0BR1 = 0;   
     // The 16-bit value of (UCBxBR0 + UCBxBR1 × 256) forms the prescaler value. (ahora esta puesto en 80)
+    UCB0CTL1 = UCSSEL_2;          // SMCLK, remove reset
 
     //UCB0I2CSA = slaveAddr;                  // Set slave address
     // UCB0CTL1 &= ~UCSWRST;                   // Release software reset
@@ -129,6 +129,7 @@ void I2C_switchSlave(uint8_t slaveAddr) {
 
 // I2C write data function
 uint8_t I2C_writeData(uint8_t* data, uint8_t length) {
+
     I2C_start(TRANSMIT);                        // Generate start condition
     
     uint8_t retryCount = 0;
@@ -197,6 +198,8 @@ void I2C_start(bool action) {
         UCB0CTL1 &= ~UCTR;          // Set as receiver
     }
     UCB0CTL1 |= UCTXSTT;            // Generate start condition
+    UCB0TXBUF = 0x55;
+
     while (UCB0CTL1 & UCTXSTT);     // Wait for start condition to be transmitted. This bit is automatically cleared by hardware
 }
 
