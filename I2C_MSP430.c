@@ -14,7 +14,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include <msp430g2553.h>
+#include <msp430.h>
 
 /*******************************************************************************
  * CONSTANT AND MACRO DEFINITIONS USING #DEFINE
@@ -46,7 +46,7 @@ void I2C_start(bool action);
 /**
  * @brief: Sends a stop condition
 */
-void I2C_stop();
+void I2C_stop(bool action);
 
 /**
  * @brief: Sends a byte of data
@@ -132,8 +132,8 @@ uint8_t I2C_writeData(uint8_t* data, uint8_t length) {
     I2C_start(TRANSMIT);                        // Generate start condition
     
     uint8_t retryCount = 0;
-
-    for (uint8_t i = 0; i < length; i++) {
+    uint8_t i;
+    for ( i = 0; i < length; i++) {
         I2C_writeByte(data[i]);    // Generate stop condition
 
                      
@@ -173,8 +173,8 @@ uint8_t I2C_readData(uint8_t* data, uint8_t length) {
 
     }
     // I2C_writeByte((slaveAddr << 1) | 0x01); // Send slave address with read bit (lo hace solo)
-    
-    for (uint8_t i = 0; i < length - 1; i++) {
+    uint8_t i;
+    for (i = 0; i < length - 1; i++) {
         data[i] = I2C_readByte();           // Read data byte
     }
     data[length - 1] = I2C_readByte();      // Read last data byte
