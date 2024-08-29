@@ -40,15 +40,17 @@ void I2C_init();
  * @brief: Sends multiple bytes of data
  * @param data: Pointer to data to be sent
  * @param length: Number of bytes to be sent
+ * @return: 0 if success, 1 if error
 */
-void I2C_writeData(uint8_t* data, uint8_t length);
+uint8_t I2C_writeData(uint8_t* data, uint8_t length);
 
 /**
  * @brief: Reads multiple bytes of data
  * @param data: Pointer to data to be read
  * @param length: Number of bytes to be read
+ * @return: 0 if success, 1 if error
 */
-void I2C_readData(uint8_t* data, uint8_t length);
+u_int8_t I2C_readData(uint8_t* data, uint8_t length);
 
 /**
  * @brief: Switches the I2C slave address

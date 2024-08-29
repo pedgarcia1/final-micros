@@ -58,14 +58,14 @@ void EEPROM_init(void);
  * @param address: Address to write data
  * @param data: Data to be written
  */
-void EEPROM_writeData(uint16_t address, uint8_t data);
+void EEPROM_writeData(uint16_t address, uint8_t* data, uint8_t length);
 
 /**
  * @brief: Reads a byte of data from EEPROM
  * @param address: Address to read data
  * @return: Data read
  */
-uint8_t EEPROM_readData(uint16_t address);
+uint8_t EEPROM_readData(uint16_t address, uint8_t* data, uint8_t length);
 
 
 /*******************************************************************************
