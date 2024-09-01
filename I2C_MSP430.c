@@ -13,7 +13,7 @@
 #include "I2C_MSP430.h"
 #include <stdint.h>
 #include <stdbool.h>
-
+#include "GPIO_OW.h"
 #include <msp430.h>
 
 /*******************************************************************************
@@ -25,6 +25,9 @@
 #define RECEIVE false
 #define WRITE 0
 #define READ 1
+// I2C protocol
+#define I2C_SCL     1,6
+#define I2C_SDA     1,7
 
 /*******************************************************************************
  * ENUMERATIONS AND STRUCTURES AND TYPEDEFS
@@ -59,6 +62,8 @@ void I2C_writeByte(uint8_t data);
  * @return: Data read
 */
 uint8_t I2C_readByte(void);
+
+
 
 /*******************************************************************************
  * ROM CONST VARIABLES WITH FILE LEVEL SCOPE
@@ -113,18 +118,42 @@ void I2C_init() {
     // Configure I2C module
     UCB0CTL1 |= UCSWRST;                    // Enable software reset
     UCB0CTL0 = UCMST + UCMODE_3 + UCSYNC;   // Master mode, I2C mode, synchronous mode, 7-bit slave address
-    UCB0BR0 = 10;                           // Set clock divider for desired SCL frequency (100 kHz)
+    UCB0BR0 = 80;                           // Set clock divider for desired SCL frequency (100 kHz)
     UCB0BR1 = 0;   
     // The 16-bit value of (UCBxBR0 + UCBxBR1 × 256) forms the prescaler value. (ahora esta puesto en 80)
     UCB0CTL1 = UCSSEL_2;          // SMCLK, remove reset
+    UCB0CTL1 &= ~UCSWRST;                   // Release software reset
 
     //UCB0I2CSA = slaveAddr;                  // Set slave address
     // UCB0CTL1 &= ~UCSWRST;                   // Release software reset
     IE2 &= ~(UCB0TXIE | UCB0RXIE);             // Enable transmit and receive interrupts
     IFG2 &= ~(UCB0TXIFG | UCB0RXIFG);
+
+
+
+
 }
 void I2C_switchSlave(uint8_t slaveAddr) {
     UCB0I2CSA = slaveAddr;                  // Set slave address
+}
+
+void I2C_clearBus() {
+                    PIN_SEL(I2C_SCL,  LOW);
+                    PIN_SEL(I2C_SDA,  LOW);
+                    PIN_SEL2(I2C_SCL, LOW);
+                    PIN_SEL2(I2C_SDA, LOW);
+
+                    DIGITAL_WRITE(I2C_SCL, LOW);
+                    DIGITAL_WRITE(I2C_SDA, LOW);
+
+                    PIN_OUTPUT(I2C_SCL);
+                    PIN_OUTPUT(I2C_SDA);
+
+                    PIN_SEL(I2C_SCL,  HIGH);
+                    PIN_SEL(I2C_SDA,  HIGH);
+                    PIN_SEL2(I2C_SCL, HIGH);
+                    PIN_SEL2(I2C_SDA, HIGH); 
+
 }
 
 // I2C write data function
@@ -197,9 +226,9 @@ void I2C_start(bool action) {
     } else {
         UCB0CTL1 &= ~UCTR;          // Set as receiver
     }
-    UCB0CTL1 |= UCTXSTT;            // Generate start condition
-    UCB0TXBUF = 0x55;
 
+    UCB0CTL1 |= UCTXSTT;            // Generate start condition
+    UCB0TXBUF = 0x1; // SIN ESTA LINEA SE ROMPE Y NO SE PORQUE
     while (UCB0CTL1 & UCTXSTT);     // Wait for start condition to be transmitted. This bit is automatically cleared by hardware
 }
 
@@ -225,3 +254,6 @@ uint8_t I2C_readByte() {
     while (!(IFG2 & UCB0RXIFG));    // Wait for receive buffer to be full
     return UCB0RXBUF;               // Return received data
 }
+
+
+

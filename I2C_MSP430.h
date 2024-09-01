@@ -37,6 +37,13 @@
 void I2C_init();
 
 /**
+ * @brief: Clears the I2C bus
+*/
+void I2C_clearBus(void);
+
+
+
+/**
  * @brief: Sends multiple bytes of data
  * @param data: Pointer to data to be sent
  * @param length: Number of bytes to be sent

@@ -55,6 +55,7 @@
 void EEPROM_init() {
     I2C_init();
     I2C_switchSlave(EEPROM_SLAVE_ADDR);
+   // I2C_clearBus();
 }
 
 // EEPROM write byte function
@@ -66,11 +67,11 @@ void EEPROM_writeData(uint16_t address, uint8_t* data, uint8_t length) {
     I2C_writeData(writeData, 3);
 
     // Wait for write cycle to complete
-    __delay_cycles(10000);
+    __delay_cycles(1000000);
 }
 
 // EEPROM read byte function
-uint8_t EEPROM_readData(uint16_t address, uint8_t* data, uint8_t length) {
+uint8_t EEPROM_readData(uint16_t address, uint8_t length) {
     uint8_t addrHigh = (address >> 8) & 0xFF;
     uint8_t addrLow = address & 0xFF;
     uint8_t readData;
