@@ -47,7 +47,7 @@ void AppRun(void)
 
     uint8_t debug;
 
-    dato_leido = EEPROM_readData(20, 1);
+    dato_leido = EEPROM_readByte(20);
     debug = &dato_leido;
 
 

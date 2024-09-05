@@ -17,8 +17,8 @@
  * CONSTANT AND MACRO DEFINITIONS USING #DEFINE
  ******************************************************************************/
 
-#define LARGO_VECTOR_ISR 5
-#define LARGO_VECTOR_TIMER_ISR 5
+#define LARGO_VECTOR_ISR 10
+#define LARGO_VECTOR_TIMER_ISR 2
 /*******************************************************************************
  * ENUMERATIONS AND STRUCTURES AND TYPEDEFS
  ******************************************************************************/
