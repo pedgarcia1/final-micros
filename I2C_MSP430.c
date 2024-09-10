@@ -11,10 +11,8 @@
  * INCLUDE HEADER FILES
  ******************************************************************************/
 #include "I2C_MSP430.h"
-#include <stdint.h>
-#include <stdbool.h>
+#include "hardware.h"
 #include "GPIO_OW.h"
-#include <msp430.h>
 
 /*******************************************************************************
  * CONSTANT AND MACRO DEFINITIONS USING #DEFINE
@@ -40,29 +38,35 @@
 /*******************************************************************************
  * FUNCTION PROTOTYPES FOR PRIVATE FUNCTIONS WITH FILE LEVEL SCOPE
  ******************************************************************************/
-/**
- * @brief: Sends a start condition
- * @param action: True if master is transmitting, False if master is receiving
-*/
-void I2C_start(bool action);
 
 /**
- * @brief: Sends a stop condition
-*/
-void I2C_stop(bool action);
+ * @brief  Waits for the I2C start condition to be successfully transmitted.
+ *         Handles NACK from the slave and timeouts.
+ * @return 0 if successful, ADDRESS_NACK_CODE if NACK is received,
+ *         TIMEOUT_START_CODE if a timeout occurs.
+ */
+uint8_t wait_for_start(void);
 
 /**
- * @brief: Sends a byte of data
- * @param data: Data to be sent
-*/
-void I2C_writeByte(uint8_t data);
+ * @brief  Waits for the I2C transmit buffer to be ready for the next byte.
+ *         Checks for NACK conditions and handles timeouts.
+ * @return 0 if successful, TRANSMIT_NACK_CODE if NACK is received,
+ *         TIMEOUT_TRANSMIT_CODE if a timeout occurs.
+ */
+uint8_t wait_for_transmit(void);
 
 /**
- * @brief: Reads a byte of data
- * @return: Data read
-*/
-uint8_t I2C_readByte(void);
+ * @brief  Waits for the I2C receive buffer to be ready for the next byte.
+ *         Handles timeouts.
+ * @return 0 if successful, TIMEOUT_RECEIVE_CODE if a timeout occurs.
+ */
+uint8_t wait_for_receive(void);
 
+/**
+ * @brief  Waits for the I2C stop condition to be transmitted.
+ * @return 0 if successful, TIMEOUT_STOP_CODE if a timeout occurs.
+ */
+uint8_t wait_for_stop(void);
 
 
 /*******************************************************************************
@@ -72,6 +76,7 @@ uint8_t I2C_readByte(void);
 /*******************************************************************************
  * STATIC VARIABLES AND CONST VARIABLES WITH FILE LEVEL SCOPE
  ******************************************************************************/
+enum I2C_error_codes status;
 
 /*******************************************************************************
  *******************************************************************************
@@ -85,7 +90,7 @@ void I2C_init() {
     // Configure I2C pins
     P1SEL   |= I2C_SCL_PIN + I2C_SDA_PIN;     // Select I2C function for these pins
     P1SEL2  |= I2C_SCL_PIN + I2C_SDA_PIN;    
-    //P1REN   |= I2C_SCL_PIN + I2C_SDA_PIN;     // Enable pull-up resistor. Not sure if done by code or hardware (creo que se hace por hardware)
+    
 
     // Configure I2C module
     UCB0CTL1 |= UCSWRST;                    // Enable software reset
@@ -96,71 +101,69 @@ void I2C_init() {
     UCB0CTL1 = UCSSEL_2;          // SMCLK, remove reset
     UCB0CTL1 &= ~UCSWRST;                   // Release software reset
 
-    IE2 &= ~(UCB0TXIE | UCB0RXIE);             
+    IE2 &= ~(UCB0TXIE | UCB0RXIE);    // Enable I2C interrupt         
     IFG2 &= ~(UCB0TXIFG | UCB0RXIFG);
 
 
 
 
 }
+
+// I2C switch slave function
 void I2C_switchSlave(uint8_t slaveAddr) {
+    UCB0CTL1 |= UCSWRST;                    // Enable software reset
     UCB0I2CSA = slaveAddr;                  // Set slave address
+    UCB0CTL1 &= ~UCSWRST;                   // Release software reset
 }
 
 
 // I2C write data function
 uint8_t I2C_writeData(uint8_t* data, uint8_t length) {
 
-    I2C_start(TRANSMIT);  // Generate start condition
+    UCB0CTL1 |= UCTR;  // Set as transmitter
+    UCB0CTL1 |= UCTXSTT;            // Generate start condition
+    UCB0TXBUF = data[1];               // Load data into transmit buffer
     
-    uint8_t retryCount = 0;
-    uint8_t i;
-    for ( i = 0; i < length; i++) {
-        I2C_writeByte(data[i]);   
 
-                     
-        if ((UCB0STAT & UCNACKIFG) && retryCount < 0xFF ) {  // Check for NACK
-            UCB0STAT &= ~UCNACKIFG;  // Clear NACK flag
-            I2C_start(TRANSMIT);                // Generate start condition again
-            i--;  // Repeat current byte
-            retryCount++;  // Increment retry counter
-
-        } else if (retryCount >= 0xFFFF) {
-            return 1;  // Return error code                    
-        }
+    if (status = wait_for_start()) return status;
+    
+    if (status = wait_for_transmit()) return status;
+    
+    if (length > 1) {
+        uint8_t i;
+        for ( i = 1; i < length; i++) {
+            UCB0TXBUF = data[i];  // Load data into transmit buffer
+            if (status = wait_for_transmit()) return status;
+        } 
     }
-    I2C_stop(TRANSMIT); // Generate stop condition
+    
+
+    UCB0CTL1 |= UCTXSTP;            // Generate stop condition
+    if (status = wait_for_stop()) return status;
+
+    
     return 0; // Return success code
 }
 
 // I2C read data function
 uint8_t I2C_readData(uint8_t* data, uint8_t length) {
-    I2C_start(RECEIVE);                     // Generate start condition
-    
-    if (UCB0STAT & UCNACKIFG) {             // Check for NACK
-        UCB0STAT &= ~UCNACKIFG;             // Clear NACK flag
-        uint8_t retryCounter = 0;
-        while (retryCounter < 0xFF) {
-            I2C_start(RECEIVE);             // Generate start condition again
-            if (!(UCB0STAT & UCNACKIFG)) {   // Check for NACK
-                break;
-            }
-            retryCounter++;                  // Increment retry counter
-            UCB0STAT &= ~UCNACKIFG;             // Clear NACK flag
-        }
-        if (retryCounter >= 0xFFFF) {
-            return 1; // Return error code
-        }
-        
 
-    }
-    // I2C_writeByte((slaveAddr << 1) | 0x01); // Send slave address with read bit (lo hace solo)
+    UCB0CTL1 &= ~UCTR;                      // Set as receiver
+    UCB0CTL1 |= UCTXSTT;                    // Generate start condition
+    if (status = wait_for_start()) return status;
+
     uint8_t i;
     for (i = 0; i < length - 1; i++) {
-        data[i] = I2C_readByte();           // Read data byte
+        data[i] = UCB0RXBUF;           // Read data byte
+        if (status = wait_for_receive()) return status;
     }
-    data[length - 1] = I2C_readByte();      // Read last data byte
-    I2C_stop(RECEIVE);                      // Generate stop condition
+    data[length - 1] = UCB0RXBUF;      // Read last data byte
+    if (status = wait_for_receive()) return status;
+    
+    UCB0CTL1 |= UCTXNACK;       // Generate NACK condition
+    UCB0CTL1 |= UCTXSTP;        // Generate stop condition
+    if (status = wait_for_stop()) return status;
+
     return 0; // Return success code
 }
 
@@ -171,41 +174,64 @@ uint8_t I2C_readData(uint8_t* data, uint8_t length) {
  *******************************************************************************
  ******************************************************************************/
 
-// I2C start condition function
-void I2C_start(bool action) {
-    if (action) {
-        UCB0CTL1 |= UCTR;           // Set as transmitter
-    } else {
-        UCB0CTL1 &= ~UCTR;          // Set as receiver
+uint8_t wait_for_start(void) {
+    unsigned long timeout = 1000000;  // Larger timeout value
+    while (UCB0CTL1 & UCTXSTT && timeout--) {
+        if (UCB0STAT & UCNACKIFG) {
+            UCB0CTL1 |= UCTXSTP;            // Generate stop condition
+            return ADDRESS_NACK_CODE;  // Return error code if NACK received
+        }
     }
-
-    UCB0CTL1 |= UCTXSTT;            // Generate start condition
-    UCB0TXBUF = 0x1; // SIN ESTA LINEA SE ROMPE Y NO SE PORQUE
-    while (UCB0CTL1 & UCTXSTT);     // Wait for start condition to be transmitted. This bit is automatically cleared by hardware
-}
-
-// I2C stop condition function
-void I2C_stop(bool action) {
-    //NACK if RECEIVING
-    if (!action) {
-        UCB0CTL1 |= UCTXNACK;       // Generate NACK condition
+    if (timeout == 0) {
+        return TIMEOUT_START_CODE;  // Timeout error
     }
-    
-    UCB0CTL1 |= UCTXSTP;            // Generate stop condition
-    while (UCB0CTL1 & UCTXSTP);     // Wait for stop condition to be transmitted. This bit is automatically cleared by hardware
+    else {
+        return 0;  // Success code
+    }
 }
 
-// I2C write byte function
-void I2C_writeByte(uint8_t data) {
-    UCB0TXBUF = data;               // Load data into transmit buffer
-    while (!(IFG2 & UCB0TXIFG));    // Wait for transmit buffer to be empty
+
+uint8_t wait_for_transmit (void) {
+    unsigned long timeout = 1000000;  // Larger timeout value
+    while (!(IFG2 & UCB0TXIFG) && timeout--) {
+        if (UCB0STAT & UCNACKIFG) {
+            UCB0CTL1 |= UCTXSTP;            // Generate stop condition
+            return TRANSMIT_NACK_CODE;  // Return error code if NACK received
+        }
+    }
+    if (timeout == 0) {
+        return TIMEOUT_TRANSMIT_CODE;  // Timeout error
+    }
+    else {
+        return 0;  // Success code
+    }
 }
 
-// I2C read byte function
-uint8_t I2C_readByte() {
-    while (!(IFG2 & UCB0RXIFG));    // Wait for receive buffer to be full
-    return UCB0RXBUF;               // Return received data
+
+uint8_t wait_for_receive(void) {
+    unsigned long timeout = 1000000;  // Larger timeout value
+    while (!(IFG2 & UCB0RXIFG) && timeout--);
+    if (timeout == 0) {
+        return TIMEOUT_RECEIVE_CODE;  // Timeout error
+    }
+    else {
+        return 0;  // Success code
+    }
 }
+
+
+uint8_t wait_for_stop(void) {
+    unsigned long timeout = 1000000;  // Larger timeout value
+    while (UCB0CTL1 & UCTXSTP && timeout--);
+    if (timeout == 0) {
+        return TIMEOUT_STOP_CODE;  // Timeout error
+    }
+    else {
+        return 0;  // Success code
+    }
+}
+
+
 
 
 

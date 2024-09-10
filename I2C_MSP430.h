@@ -22,7 +22,14 @@
 /*******************************************************************************
  * ENUMERATIONS AND STRUCTURES AND TYPEDEFS
  ******************************************************************************/
-
+enum I2C_error_codes {
+    ADDRESS_NACK_CODE = 1,
+    TIMEOUT_START_CODE,
+    TRANSMIT_NACK_CODE,
+    TIMEOUT_TRANSMIT_CODE,
+    TIMEOUT_RECEIVE_CODE,
+    TIMEOUT_STOP_CODE
+};
 /*******************************************************************************
  * VARIABLE PROTOTYPES WITH GLOBAL SCOPE
  ******************************************************************************/
@@ -37,27 +44,40 @@
 void I2C_init();
 
 /**
- * @brief: Clears the I2C bus
-*/
-void I2C_clearBus(void);
-
-
-
-/**
- * @brief: Sends multiple bytes of data
- * @param data: Pointer to data to be sent
- * @param length: Number of bytes to be sent
- * @return: 0 if success, 1 if error
-*/
+ * @brief Sends multiple bytes of data over I2C.
+ * 
+ * This function transmits a specified number of bytes to a slave device
+ * using the I2C communication protocol.
+ * 
+ * @param data Pointer to the buffer holding the data to be transmitted.
+ * @param length Number of bytes to be transmitted from the data buffer.
+ * 
+ * @return 0 if successful, or an appropriate error code if a failure occurs.
+ *         Possible error codes include:
+ *         - TRANSMIT_NACK_CODE: NACK received after transmitting a byte.
+ *         - TIMEOUT_START_CODE: Timeout while waiting for the start condition.
+ *         - TIMEOUT_TRANSMIT_CODE: Timeout while waiting for the transmit buffer.
+ *         - TIMEOUT_STOP_CODE: Timeout while waiting for the stop condition.
+ */
 uint8_t I2C_writeData(uint8_t* data, uint8_t length);
 
 /**
- * @brief: Reads multiple bytes of data
- * @param data: Pointer to data to be read
- * @param length: Number of bytes to be read
- * @return: 0 if success, 1 if error
-*/
+ * @brief Reads multiple bytes of data over I2C.
+ * 
+ * This function receives a specified number of bytes from a slave device
+ * using the I2C communication protocol.
+ * 
+ * @param data Pointer to the buffer where the received data will be stored.
+ * @param length Number of bytes to be received and stored in the data buffer.
+ * 
+ * @return 0 if successful, or an appropriate error code if a failure occurs.
+ *         Possible error codes include:
+ *         - TIMEOUT_START_CODE: Timeout while waiting for the start condition.
+ *         - TIMEOUT_RECEIVE_CODE: Timeout while waiting for the receive buffer.
+ *         - TIMEOUT_STOP_CODE: Timeout while waiting for the stop condition.
+ */
 uint8_t I2C_readData(uint8_t* data, uint8_t length);
+
 
 /**
  * @brief: Switches the I2C slave address
