@@ -26,7 +26,7 @@
  * CONSTANT AND MACRO DEFINITIONS USING #DEFINE
  ******************************************************************************/
 #define EEPROM_SLAVE_ADDR 0x50 // Connect A2, A1, A0 to GND
-#define EEPROM_WRITE_TIME 200 // 500ms write time, una interrupción de timer cada 0.5ms
+#define EEPROM_WRITE_TIME 2000 // 1s write time, una interrupción de timer cada 0.5ms
 
 /*******************************************************************************
  * ENUMERATIONS AND STRUCTURES AND TYPEDEFS
@@ -69,29 +69,33 @@ void EEPROM_writeData(uint16_t address, uint8_t* data, uint8_t length) {
     uint8_t addrHigh = (address >> 8) & 0xFF;
     uint8_t addrLow = address & 0xFF;
 
-    uint8_t writeData[3] = {addrHigh, addrLow, *data};
-    I2C_writeData(writeData, 3);
+    uint8_t writeData[length + 2];
+    uint8_t writeData[1] = addrHigh; 
+    uint8_t writeData[2] = addrLow;
+    uint8_t i;
+    for (i = 0; i < length; i++) {
+        writeData[i + 3] = data[i];
+    }
 
-    
-    send_to_isr(EEPROM_finishWrite, EEPROM_WRITE_TIME); // 500ms write time
+    I2C_writeData(writeData, length + 2);
+
+    send_to_isr(EEPROM_finishWrite, EEPROM_WRITE_TIME); // 1s write time
     EEPROM_writingFlag = TRUE;
     
 }
 
-// EEPROM read byte function
-uint8_t EEPROM_readByte(uint16_t address) {
+// EEPROM read data function
+uint8_t EEPROM_readData(uint16_t address, uint8_t* readData, uint8_t length) {
     while (EEPROM_writingFlag); // Wait until the EEPROM is not writing
     
     uint8_t addrHigh = (address >> 8) & 0xFF;
     uint8_t addrLow = address & 0xFF;
-    uint8_t readData;
 
     uint8_t addressData[2] = {addrHigh, addrLow};
     I2C_writeData(addressData, 2);  
 
-    I2C_readData(&readData, 1);
+    I2C_readData(readData, length);
 
-    return readData;
 }
 
 /*******************************************************************************
