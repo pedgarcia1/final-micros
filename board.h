@@ -34,6 +34,10 @@
 
 #define STATUS_LED PORTNUM2PIN(2,1) // P2.1
 
+// I2C Protocol
+#define I2C_SCL_PIN BIT6 // P1.6
+#define I2C_SDA_PIN BIT7 // P1.7
+
 
 
 /*******************************************************************************

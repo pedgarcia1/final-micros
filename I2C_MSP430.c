@@ -13,19 +13,15 @@
 #include "I2C_MSP430.h"
 #include "hardware.h"
 #include "GPIO_OW.h"
+#include "board.h"
 
 /*******************************************************************************
  * CONSTANT AND MACRO DEFINITIONS USING #DEFINE
  ******************************************************************************/
-#define I2C_SCL_PIN BIT6
-#define I2C_SDA_PIN BIT7
 #define TRANSMIT true
 #define RECEIVE false
 #define WRITE 0
 #define READ 1
-// I2C protocol
-#define I2C_SCL     1,6
-#define I2C_SDA     1,7
 
 /*******************************************************************************
  * ENUMERATIONS AND STRUCTURES AND TYPEDEFS
