@@ -19,6 +19,7 @@
 #include "pwm.h"
 #include "timer.h"
 #include "statusLed.h"
+#include "eeprom.h"
 
 /*******************************************************************************
  * ENUMERATIONS AND STRUCTURES AND TYPEDEFS
@@ -42,6 +43,11 @@ static const uint8_t power = 1; // 0 parasite power, 1 external power supply (Vd
 uint8_t setpoint, histeresis, temp_int;
 uint16_t intMuestreo;
 uint8_t calefactor = 0;
+
+uint8_t envio[LARGO_ENV] = {0xFA, 0xFB, 0xFC, 0xF0, 0xF2, 0xF4};
+uint8_t direccion = 0x75; // Random Addres
+uint8_t datos_leidos[LARGO_READ];
+uint8_t debug;
 
 #define MAX_TEMP    60.0
 #define MIN_TEMP    20.0
@@ -83,6 +89,36 @@ void AppInit(void)
     setpoint = 30;
     histeresis = 1;
     intMuestreo = 1000;
+
+    uint8_t timeout = 1;
+    while (!timeout)
+    {
+        if (UART_connection())
+        {                               // Chequea conexcion con PC por UART
+            statusLed_setState(NORMAL); // LED estado normal
+
+            // Lectura datos de la PC
+            UART_RX_Buffer *rxBufferPointer = UART_getBuffer();
+            UART_parseData(rxBufferPointer, &setpoint, &histeresis, &intMuestreo);
+            temp_setTMuestreo(intMuestreo);
+            timeout = 1; // Salir del loop
+        }
+    }
+
+    if (!UART_connection())
+    {
+        statusLed_setState(ERROR); // LED estado error
+
+        // Lectura de la EEPROM
+        EEPROM_readData(direccion, datos_leidos, LARGO_READ);
+        // Parse EEPROM data
+        // if checksum OK
+        setpoint = datos_leidos[0];
+        histeresis = datos_leidos[1];
+        // datos_leidos[2] MSB de intMuestreo
+        // datos_leidos[3] LSB de intMuestreo
+        intMuestreo = (datos_leidos[2] << 8) | datos_leidos[3];
+    }
 }
 
 void AppRun(void)
@@ -126,21 +162,30 @@ void AppRun(void)
         temp_int = ((int) TEMP);
     }
 
-    // if(UART_connection()){
-    //     statusLed_setState(NORMAL);
+    if (UART_connection())
+    {
+        statusLed_setState(NORMAL);
 
-    //     UART_RX_Buffer* rxBufferPointer = UART_getBuffer();
-    //     UART_parseData(rxBufferPointer, &setpoint, &histeresis, &intMuestreo);
-    //     temp_setTMuestreo(intMuestreo);
-    // }else{
-    //     statusLed_setState(ERROR);
+        UART_RX_Buffer *rxBufferPointer = UART_getBuffer();
+        UART_parseData(rxBufferPointer, &setpoint, &histeresis, &intMuestreo);
+        temp_setTMuestreo(intMuestreo);
 
-
-    // }
-    uint8_t lecturaEEPROM;
-    uint8_t debugEEPROM;
-    EEPROM_readData(0, &lecturaEEPROM, 1);
-    debugEEPROM = lecturaEEPROM -1;
+        if (!EEPROM_getWritingFlag())
+        {
+            envio[0] = setpoint;
+            envio[1] = histeresis;
+            envio[2] = (intMuestreo >> 8) & 0xFF;
+            envio[3] = intMuestreo & 0xFF;
+            envio[4] = 0x00;
+            envio[5] = 0x00;
+            // Write data to EEPROM
+            EEPROM_writeData(direccion, envio, LARGO_ENV);
+        }
+    }
+    else
+    {
+        // statusLed_setState(ERROR);
+    }
 
     uint8_t setpoint_anterior = setpoint;
     if(setpoint_anterior != setpoint){

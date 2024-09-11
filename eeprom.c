@@ -101,6 +101,10 @@ void EEPROM_readData(uint16_t address, uint8_t* readData, uint8_t length) {
 
 }
 
+uint8_t EEPROM_getWritingFlag(void) {
+    return EEPROM_writingFlag;
+}
+
 /*******************************************************************************
  *******************************************************************************
                         LOCAL FUNCTION DEFINITIONS

@@ -37,6 +37,9 @@
 #define HYSTERESIS_CS_ADDRESS   0x0008
 
 #define MAX_WRITE_LENGTH 10
+
+#define LARGO_ENV 6
+#define LARGO_READ 6
 /*******************************************************************************
  * ENUMERATIONS AND STRUCTURES AND TYPEDEFS
  ******************************************************************************/
@@ -73,6 +76,12 @@ void EEPROM_writeData(uint16_t address, uint8_t* data, uint8_t length);
  * @param length The number of bytes to read from the EEPROM.
  */
 void EEPROM_readData(uint16_t address, uint8_t* data, uint8_t length);
+
+
+/**
+ * @brief Returns the EEPROM writing flag
+ */
+uint8_t EEPROM_getWritingFlag(void);
 
 
 /*******************************************************************************
