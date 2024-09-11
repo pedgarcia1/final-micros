@@ -85,7 +85,7 @@ void EEPROM_writeData(uint16_t address, uint8_t* data, uint8_t length) {
 }
 
 // EEPROM read data function
-uint8_t EEPROM_readData(uint16_t address, uint8_t* readData, uint8_t length) {
+void EEPROM_readData(uint16_t address, uint8_t* readData, uint8_t length) {
     while (EEPROM_writingFlag); // Wait until the EEPROM is not writing
     
     uint8_t addrHigh = (address >> 8) & 0xFF;

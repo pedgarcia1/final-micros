@@ -1,19 +1,11 @@
-#include "system.h"
-#include "gpio.h"
-#include "board.h"
-#include "hardware.h"
-#include "isr.h"
+
 #include "eeprom.h"
-#include "GPIO_OW.h"
+
 
 void AppInit(void);
 void AppRun(void);
 
-// I2C protocol
-#define I2C_SCL     1,6
-#define I2C_SDA     1,7
 
-int otra = 0;
 
 void main(void)
 {
@@ -38,18 +30,25 @@ void AppInit(void)
 
 void AppRun(void)
 {
+    #define LARGO_ENV 3
+    #define LARGO_READ 3
 
     
-    uint8_t dato = 0x14;
-    uint8_t dato_leido = 0x1;
+    uint8_t envio[LARGO_ENV] = {0x10, 0x20, 0x30};
+    uint8_t direccion = 0x01;
+    uint8_t datos_leidos[LARGO_READ];
 
-    EEPROM_writeData(10, &dato, 1);
+    EEPROM_writeData(direccion, envio, LARGO_ENV);
 
     uint8_t debug;
 
-    dato_leido = EEPROM_readByte(20);
-    debug = &dato_leido;
+    EEPROM_readData(direccion, datos_leidos, LARGO_READ);
+    uint8_t i;
 
+    for (i = 0; i < LARGO_READ; i++)
+    {
+        debug = datos_leidos[i];
+    }
 
     __delay_cycles(1000000);
     
