@@ -23,7 +23,8 @@
  * ENUMERATIONS AND STRUCTURES AND TYPEDEFS
  ******************************************************************************/
 enum I2C_error_codes {
-    ADDRESS_NACK_CODE = 1,
+    SUCCESS = 0,
+    ADDRESS_NACK_CODE,
     TIMEOUT_START_CODE,
     TRANSMIT_NACK_CODE,
     TIMEOUT_TRANSMIT_CODE,

@@ -122,7 +122,7 @@ uint8_t I2C_writeData(uint8_t* data, uint8_t length) {
 
     UCB0CTL1 |= UCTR;  // Set as transmitter
     UCB0CTL1 |= UCTXSTT;            // Generate start condition
-    UCB0TXBUF = data[1];               // Load data into transmit buffer
+    UCB0TXBUF = data[0];               // Load data into transmit buffer
     
 
     if (status = wait_for_start()) return status;
@@ -142,7 +142,7 @@ uint8_t I2C_writeData(uint8_t* data, uint8_t length) {
     if (status = wait_for_stop()) return status;
 
     
-    return 0; // Return success code
+    return SUCCESS; // Return success code
 }
 
 // I2C read data function
@@ -153,18 +153,16 @@ uint8_t I2C_readData(uint8_t* data, uint8_t length) {
     if (status = wait_for_start()) return status;
 
     uint8_t i;
-    for (i = 0; i < length - 1; i++) {
-        data[i] = UCB0RXBUF;           // Read data byte
+    for (i = 0; i < length; i++) {
         if (status = wait_for_receive()) return status;
+        data[i] = UCB0RXBUF;           // Read data byte
     }
-    data[length - 1] = UCB0RXBUF;      // Read last data byte
-    if (status = wait_for_receive()) return status;
-    
-    UCB0CTL1 |= UCTXNACK;       // Generate NACK condition
+
+   // UCB0CTL1 |= UCTXNACK;       // Generate NACK condition
     UCB0CTL1 |= UCTXSTP;        // Generate stop condition
     if (status = wait_for_stop()) return status;
 
-    return 0; // Return success code
+    return SUCCESS; // Return success code
 }
 
 
@@ -175,7 +173,7 @@ uint8_t I2C_readData(uint8_t* data, uint8_t length) {
  ******************************************************************************/
 
 uint8_t wait_for_start(void) {
-    unsigned long timeout = 1000000;  // Larger timeout value
+    unsigned long timeout = 2000000;  // Larger timeout value
     while (UCB0CTL1 & UCTXSTT && timeout--) {
         if (UCB0STAT & UCNACKIFG) {
             UCB0CTL1 |= UCTXSTP;            // Generate stop condition
@@ -186,13 +184,13 @@ uint8_t wait_for_start(void) {
         return TIMEOUT_START_CODE;  // Timeout error
     }
     else {
-        return 0;  // Success code
+        return SUCCESS;  // Success code
     }
 }
 
 
 uint8_t wait_for_transmit (void) {
-    unsigned long timeout = 1000000;  // Larger timeout value
+    unsigned long timeout = 2000000;  // Larger timeout value
     while (!(IFG2 & UCB0TXIFG) && timeout--) {
         if (UCB0STAT & UCNACKIFG) {
             UCB0CTL1 |= UCTXSTP;            // Generate stop condition
@@ -203,31 +201,31 @@ uint8_t wait_for_transmit (void) {
         return TIMEOUT_TRANSMIT_CODE;  // Timeout error
     }
     else {
-        return 0;  // Success code
+        return SUCCESS;  // Success code
     }
 }
 
 
 uint8_t wait_for_receive(void) {
-    unsigned long timeout = 1000000;  // Larger timeout value
+    unsigned long timeout = 2000000;  // Larger timeout value
     while (!(IFG2 & UCB0RXIFG) && timeout--);
     if (timeout == 0) {
         return TIMEOUT_RECEIVE_CODE;  // Timeout error
     }
     else {
-        return 0;  // Success code
+        return SUCCESS;  // Success code
     }
 }
 
 
 uint8_t wait_for_stop(void) {
-    unsigned long timeout = 1000000;  // Larger timeout value
+    unsigned long timeout = 2000000;  // Larger timeout value
     while (UCB0CTL1 & UCTXSTP && timeout--);
     if (timeout == 0) {
         return TIMEOUT_STOP_CODE;  // Timeout error
     }
     else {
-        return 0;  // Success code
+        return SUCCESS;  // Success code
     }
 }
 

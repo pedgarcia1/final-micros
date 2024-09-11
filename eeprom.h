@@ -36,6 +36,7 @@
 #define HYSTERESIS_MSB_ADDRESS  0x0007
 #define HYSTERESIS_CS_ADDRESS   0x0008
 
+#define MAX_WRITE_LENGTH 10
 /*******************************************************************************
  * ENUMERATIONS AND STRUCTURES AND TYPEDEFS
  ******************************************************************************/

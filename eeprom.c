@@ -52,7 +52,7 @@ void EEPROM_finishWrite(void);
 /*******************************************************************************
  * STATIC VARIABLES AND CONST VARIABLES WITH FILE LEVEL SCOPE
  ******************************************************************************/
-u_int8_t EEPROM_writingFlag = FALSE;
+uint8_t EEPROM_writingFlag = FALSE;
 /*******************************************************************************
  *******************************************************************************
                         GLOBAL FUNCTION DEFINITIONS
@@ -69,13 +69,14 @@ void EEPROM_writeData(uint16_t address, uint8_t* data, uint8_t length) {
     uint8_t addrHigh = (address >> 8) & 0xFF;
     uint8_t addrLow = address & 0xFF;
 
-    uint8_t writeData[length + 2];
-    uint8_t writeData[1] = addrHigh; 
-    uint8_t writeData[2] = addrLow;
+    uint8_t writeData[MAX_WRITE_LENGTH + 2];
+    writeData[0] = addrHigh;
+    writeData[1] = addrLow;
     uint8_t i;
     for (i = 0; i < length; i++) {
-        writeData[i + 3] = data[i];
+        writeData[i + 2] = data[i];
     }
+
 
     I2C_writeData(writeData, length + 2);
 
@@ -92,7 +93,9 @@ void EEPROM_readData(uint16_t address, uint8_t* readData, uint8_t length) {
     uint8_t addrLow = address & 0xFF;
 
     uint8_t addressData[2] = {addrHigh, addrLow};
-    I2C_writeData(addressData, 2);  
+
+
+    I2C_writeData(addressData, 2);
 
     I2C_readData(readData, length);
 
