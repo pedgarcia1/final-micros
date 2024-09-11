@@ -19,12 +19,14 @@
 #include "I2C_MSP430.h"
 #include "eeprom.h"
 #include <stdint.h>
+#include "isr.h"
 
 
 /*******************************************************************************
  * CONSTANT AND MACRO DEFINITIONS USING #DEFINE
  ******************************************************************************/
 #define EEPROM_SLAVE_ADDR 0x50 // Connect A2, A1, A0 to GND
+#define EEPROM_WRITE_TIME 2000 // 1s write time, una interrupción de timer cada 0.5ms
 
 /*******************************************************************************
  * ENUMERATIONS AND STRUCTURES AND TYPEDEFS
@@ -38,6 +40,11 @@
  * FUNCTION PROTOTYPES FOR PRIVATE FUNCTIONS WITH FILE LEVEL SCOPE
  ******************************************************************************/
 
+/**
+ * @brief: sets the EEPROM writing flag in 0. Removes the function from the isr
+ */
+void EEPROM_finishWrite(void);
+
 /*******************************************************************************
  * ROM CONST VARIABLES WITH FILE LEVEL SCOPE
  ******************************************************************************/
@@ -45,7 +52,7 @@
 /*******************************************************************************
  * STATIC VARIABLES AND CONST VARIABLES WITH FILE LEVEL SCOPE
  ******************************************************************************/
-
+uint8_t EEPROM_writingFlag = FALSE;
 /*******************************************************************************
  *******************************************************************************
                         GLOBAL FUNCTION DEFINITIONS
@@ -62,25 +69,36 @@ void EEPROM_writeData(uint16_t address, uint8_t* data, uint8_t length) {
     uint8_t addrHigh = (address >> 8) & 0xFF;
     uint8_t addrLow = address & 0xFF;
 
-    uint8_t writeData[3] = {addrHigh, addrLow, data};
-    I2C_writeData(writeData, 3);
+    uint8_t writeData[MAX_WRITE_LENGTH + 2];
+    writeData[0] = addrHigh;
+    writeData[1] = addrLow;
+    uint8_t i;
+    for (i = 0; i < length; i++) {
+        writeData[i + 2] = data[i];
+    }
 
-    // Wait for write cycle to complete
-    __delay_cycles(10000);
+
+    I2C_writeData(writeData, length + 2);
+
+    send_to_isr(EEPROM_finishWrite, EEPROM_WRITE_TIME); // 1s write time
+    EEPROM_writingFlag = TRUE;
+
 }
 
-// EEPROM read byte function
-uint8_t EEPROM_readData(uint16_t address, uint8_t* data, uint8_t length) {
+// EEPROM read data function
+void EEPROM_readData(uint16_t address, uint8_t* readData, uint8_t length) {
+    while (EEPROM_writingFlag); // Wait until the EEPROM is not writing
+
     uint8_t addrHigh = (address >> 8) & 0xFF;
     uint8_t addrLow = address & 0xFF;
-    uint8_t readData;
 
     uint8_t addressData[2] = {addrHigh, addrLow};
-    I2C_writeData(addressData, 2);  
 
-    I2C_readData(&readData, 1);
 
-    return readData;
+    I2C_writeData(addressData, 2);
+
+    I2C_readData(readData, length);
+
 }
 
 /*******************************************************************************
@@ -88,3 +106,7 @@ uint8_t EEPROM_readData(uint16_t address, uint8_t* data, uint8_t length) {
                         LOCAL FUNCTION DEFINITIONS
  *******************************************************************************
  ******************************************************************************/
+void EEPROM_finishWrite(void) {
+    EEPROM_writingFlag = FALSE;
+    remove_from_isr(EEPROM_finishWrite);
+}

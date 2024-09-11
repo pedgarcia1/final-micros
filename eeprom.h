@@ -21,7 +21,6 @@
  ******************************************************************************/
 #include <msp430.h>
 #include <stdint.h>
-
 /*******************************************************************************
  * CONSTANT AND MACRO DEFINITIONS USING #DEFINE
  ******************************************************************************/
@@ -37,6 +36,7 @@
 #define HYSTERESIS_MSB_ADDRESS  0x0007
 #define HYSTERESIS_CS_ADDRESS   0x0008
 
+#define MAX_WRITE_LENGTH 10
 /*******************************************************************************
  * ENUMERATIONS AND STRUCTURES AND TYPEDEFS
  ******************************************************************************/
@@ -62,11 +62,17 @@ void EEPROM_init(void);
 void EEPROM_writeData(uint16_t address, uint8_t* data, uint8_t length);
 
 /**
- * @brief: Reads a byte of data from EEPROM
- * @param address: Address to read data
- * @return: Data read
+ * @brief Reads multiple bytes of data from the EEPROM.
+ *
+ * This function reads a specified number of bytes from the EEPROM at the given
+ * starting address and stores the data in the provided buffer.
+ *
+ * @param address The EEPROM memory address from which data should be read.
+ *                The address is 16 bits wide, allowing access to a large EEPROM.
+ * @param data Pointer to the buffer where the read data will be stored.
+ * @param length The number of bytes to read from the EEPROM.
  */
-uint8_t EEPROM_readData(uint16_t address, uint8_t* data, uint8_t length);
+void EEPROM_readData(uint16_t address, uint8_t* data, uint8_t length);
 
 
 /*******************************************************************************
