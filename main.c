@@ -44,7 +44,7 @@ uint8_t setpoint, histeresis, temp_int;
 uint16_t intMuestreo;
 uint8_t calefactor = 0;
 
-uint8_t envio[LARGO_ENV] = {0xFA, 0xFB, 0xFC, 0xF0, 0xF2, 0xF4};
+uint8_t envio[LARGO_ENV] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 uint8_t direccion = 0x75; // Random Addres
 uint8_t datos_leidos[LARGO_READ];
 uint8_t debug;
@@ -90,7 +90,7 @@ void AppInit(void)
     histeresis = 1;
     intMuestreo = 1000;
 
-    uint8_t timeout = 1;
+    uint8_t timeout = 1; // QUEDA: TIMER
     while (!timeout)
     {
         if (UART_connection())
@@ -112,12 +112,23 @@ void AppInit(void)
         // Lectura de la EEPROM
         EEPROM_readData(direccion, datos_leidos, LARGO_READ);
         // Parse EEPROM data
-        // if checksum OK
+        // Calcular el checksum sobre los datos leídos (excepto el último byte, que será el checksum almacenado)
+        uint8_t checksum = 0;
+        uint8_t i;
+        for (i = 0; i < LARGO_READ - 1; i++) {
+            checksum ^= datos_leidos[i];  // XOR de todos los datos leídos
+        }
+
+        if (1) { // checksum == datos_leidos[LARGO_READ - 1]
         setpoint = datos_leidos[0];
         histeresis = datos_leidos[1];
         // datos_leidos[2] MSB de intMuestreo
         // datos_leidos[3] LSB de intMuestreo
         intMuestreo = (datos_leidos[2] << 8) | datos_leidos[3];
+        temp_setTMuestreo(intMuestreo);
+        }else{
+
+        }
     }
 }
 
@@ -177,14 +188,17 @@ void AppRun(void)
             envio[2] = (intMuestreo >> 8) & 0xFF;
             envio[3] = intMuestreo & 0xFF;
             envio[4] = 0x00;
-            envio[5] = 0x00;
+
+            uint8_t checksum = 0;
+            // Calcular el checksum sobre los datos (del byte 0 al 4)
+            uint8_t i;
+            for (i = 0; i < (LARGO_READ - 1); i++) {
+                checksum ^= envio[i];  // XOR de los datos
+            }
+            envio[LARGO_READ - 1] = checksum; // Checksum en pos. 5
             // Write data to EEPROM
             EEPROM_writeData(direccion, envio, LARGO_ENV);
         }
-    }
-    else
-    {
-        // statusLed_setState(ERROR);
     }
 
     uint8_t setpoint_anterior = setpoint;
