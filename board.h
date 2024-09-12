@@ -33,6 +33,7 @@
 #define PWM_PIN BIT2 // P2.2
 
 #define STATUS_LED PORTNUM2PIN(2,1) // P2.1
+#define PC_LED     PORTNUM2PIN(2,3)
 
 // I2C Protocol
 #define I2C_SCL_PIN BIT6 // P1.6

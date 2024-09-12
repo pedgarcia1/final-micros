@@ -105,9 +105,10 @@ uint8_t EEPROM_getWritingFlag(void) {
     return EEPROM_writingFlag;
 }
 
-void EEPROM_parseData(enum EEPROM_PARSE parse, uint8_t *data, uint8_t length, uint8_t *setpoint, uint8_t *histeresis, uint16_t *intMuestreo)
+uint8_t EEPROM_parseData(enum EEPROM_PARSE parse, uint8_t *data, uint8_t length, uint8_t *setpoint, uint8_t *histeresis, uint16_t *intMuestreo)
 {
     uint8_t checksum = 0;
+    uint8_t checksumFlag = 0;
     uint8_t i;
 
     switch (parse)
@@ -125,11 +126,11 @@ void EEPROM_parseData(enum EEPROM_PARSE parse, uint8_t *data, uint8_t length, ui
             // data[2] MSB de intMuestreo
             // data[3] LSB de intMuestreo
             *intMuestreo = (data[2] << 8) | data[3];
-            temp_setTMuestreo(intMuestreo);
+            checksumFlag = 1;
         }
         else
         {
-            // Error de checksum ??
+            checksumFlag = 0;
         }
         break;
     case WRITE:
@@ -149,6 +150,8 @@ void EEPROM_parseData(enum EEPROM_PARSE parse, uint8_t *data, uint8_t length, ui
     default:
         break;
     }
+
+    return checksumFlag;
 }
 
 /*******************************************************************************

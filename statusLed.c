@@ -12,6 +12,9 @@ void statusLedISR(void);
 void statusLed_init(void){
     gpioMode(STATUS_LED,OUTPUT);
     send_to_isr(statusLedISR,period_global);
+
+    gpioMode(PC_LED,OUTPUT);
+    gpioWrite(PC_LED,LOW);
 }
 
 void statusLedISR(void){
@@ -35,4 +38,16 @@ void statusLed_setState(status value)
         statusLed_setPeriod(2000); // 1s
         break;
     }
+}
+
+void statusLed_PC(status value){
+    switch (value)
+        {
+        case ERROR:
+            gpioWrite(PC_LED,LOW);
+            break;
+        case NORMAL:
+            gpioWrite(PC_LED,HIGH);
+            break;
+        }
 }

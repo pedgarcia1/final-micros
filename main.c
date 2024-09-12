@@ -42,7 +42,7 @@ void AppRun(void);
  * STATIC VARIABLES AND CONST VARIABLES WITH FILE LEVEL SCOPE
  ******************************************************************************/
 static const uint8_t power = 1; // 0 parasite power, 1 external power supply (Vdd)
-uint8_t setpoint, histeresis, temp_int;
+uint8_t setpoint, histeresis, temp_int, checksumFlag;
 uint16_t intMuestreo;
 uint8_t calefactor = 0;
 
@@ -95,17 +95,13 @@ void AppInit(void)
 
 void AppInitLast(void)
 {
-    // Valores para debug
-        setpoint = 30;
-        histeresis = 1;
-        intMuestreo = 1000;
 
         timerTimeoutStart(timeoutPeriod);
         while (!timerGetTimeout())
         {
-            if (UART_connection())
-            {                               // Chequea conexcion con PC por UART
-                statusLed_setState(NORMAL); // LED estado normal
+            if (UART_connection()) // Chequea conexcion con PC por UART
+            {
+                statusLed_PC(NORMAL);
 
                 // Lectura datos de la PC
                 UART_RX_Buffer *rxBufferPointer = UART_getBuffer();
@@ -118,12 +114,20 @@ void AppInitLast(void)
 
         if (!UART_connection())
         {
-            statusLed_setState(ERROR); // LED estado error
+            statusLed_PC(ERROR);
 
             // Lectura de la EEPROM
             EEPROM_readData(direccion, datos_leidos, LARGO_READ);
             // Parse EEPROM data
-            EEPROM_parseData(READ, datos_leidos, LARGO_READ, &setpoint, &histeresis, &intMuestreo);
+            checksumFlag = EEPROM_parseData(READ, datos_leidos, LARGO_READ, &setpoint, &histeresis, &intMuestreo);
+            temp_setTMuestreo(intMuestreo);
+
+            if (checksumFlag)
+            {
+                statusLed_setState(NORMAL); // LED estado normal
+            }else{
+                statusLed_setState(ERROR); // LED estado error
+            }
         }
 }
 
@@ -170,7 +174,7 @@ void AppRun(void)
 
     if (UART_connection())
     {
-        statusLed_setState(NORMAL);
+        statusLed_PC(NORMAL);
 
         UART_RX_Buffer *rxBufferPointer = UART_getBuffer();
         UART_parseData(rxBufferPointer, &setpoint, &histeresis, &intMuestreo);
@@ -184,13 +188,6 @@ void AppRun(void)
             EEPROM_writeData(direccion, envio, LARGO_ENV);
         }
     }
-
-    uint8_t setpoint_anterior = setpoint;
-    if(setpoint_anterior != setpoint){
-        uint8_t guardar;
-        guardar = setpoint - 1;
-    }
-
 
     if(temp_int > setpoint + histeresis){
         PWM_setDC(10);

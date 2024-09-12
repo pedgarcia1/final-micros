@@ -95,9 +95,9 @@ uint8_t EEPROM_getWritingFlag(void);
  * @param setpoint: Setpoint value
  * @param histeresis: Histeresis value
  * @param intMuestreo: Sample time value
+ * @return: READ: 0 if the checksum is correct, 1 if the checksum is incorrect. WRITE: always return 0
  */
-void EEPROM_parseData(enum EEPROM_PARSE parse, uint8_t *data, uint8_t length, uint8_t *setpoint, uint8_t *histeresis, uint16_t *intMuestreo);
-
+uint8_t EEPROM_parseData(enum EEPROM_PARSE parse, uint8_t *data, uint8_t length, uint8_t *setpoint, uint8_t *histeresis, uint16_t *intMuestreo);
 /*******************************************************************************
  ******************************************************************************/
 

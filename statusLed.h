@@ -19,4 +19,6 @@ void statusLed_setPeriod(unsigned int period);
 
 void statusLed_setState(status value);
 
+void statusLed_PC(status value);
+
 #endif /* STATUS_LED_H_ */
