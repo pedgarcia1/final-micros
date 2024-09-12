@@ -18,6 +18,7 @@
 #include "isr.h"
 #include "pwm.h"
 #include "timer.h"
+#include "isrTimer.h"
 #include "statusLed.h"
 #include "eeprom.h"
 
@@ -34,6 +35,7 @@
  * FUNCTION PROTOTYPES FOR PRIVATE FUNCTIONS WITH FILE LEVEL SCOPE
  ******************************************************************************/
 void AppInit(void);
+void AppInitLast(void);
 void AppRun(void);
 
 /*******************************************************************************
@@ -53,6 +55,8 @@ uint8_t debug;
 #define MIN_TEMP    20.0
 #define LED_MAX     8.0
 
+unsigned int timeoutPeriod = 6000;
+
 /*******************************************************************************
  *******************************************************************************
                         GLOBAL FUNCTION DEFINITIONS
@@ -65,7 +69,8 @@ void main(void)
     systemInitFirst();
     boardInit(); // Empty
     AppInit();
-    systemInitLast();
+    systemInitLast(); // Start WDT timer and interrupts
+    AppInitLast(); // Last init depends on WDT timer & interrupts
 
     for (;;)
         AppRun();
@@ -75,7 +80,7 @@ void main(void)
 void AppInit(void)
 {
     // Inicializacin (se ejecuta 1 sola vez al comienzo)
-    timerInitialization(TIMER_PERIOD); // 100ms timer perdios for ADC interrupt
+    timerInitialization(TIMER_PERIOD);
     timerStart();
     temp_Init(); // Inicializa el sensor de temperatura DS18B20
     ledBarInit(); // Inicializa el display de 8 leds y el shift register 74HC595
@@ -85,51 +90,57 @@ void AppInit(void)
     EEPROM_init();
     // temp_SetResolution(TEMP_9_BIT); NO FUNCIONA, BORRAR O PROBAR CON EL DS18B20
 
+
+}
+
+void AppInitLast(void)
+{
     // Valores para debug
-    setpoint = 30;
-    histeresis = 1;
-    intMuestreo = 1000;
+        setpoint = 30;
+        histeresis = 1;
+        intMuestreo = 1000;
 
-    uint8_t timeout = 1; // QUEDA: TIMER
-    while (!timeout)
-    {
-        if (UART_connection())
-        {                               // Chequea conexcion con PC por UART
-            statusLed_setState(NORMAL); // LED estado normal
+        timerTimeoutStart(timeoutPeriod);
+        while (!timerGetTimeout())
+        {
+            if (UART_connection())
+            {                               // Chequea conexcion con PC por UART
+                statusLed_setState(NORMAL); // LED estado normal
 
-            // Lectura datos de la PC
-            UART_RX_Buffer *rxBufferPointer = UART_getBuffer();
-            UART_parseData(rxBufferPointer, &setpoint, &histeresis, &intMuestreo);
+                // Lectura datos de la PC
+                UART_RX_Buffer *rxBufferPointer = UART_getBuffer();
+                UART_parseData(rxBufferPointer, &setpoint, &histeresis, &intMuestreo);
+                temp_setTMuestreo(intMuestreo);
+
+                timerTimeoutStop(); // Salir del loop
+            }
+        }
+
+        if (!UART_connection())
+        {
+            statusLed_setState(ERROR); // LED estado error
+
+            // Lectura de la EEPROM
+            EEPROM_readData(direccion, datos_leidos, LARGO_READ);
+            // Parse EEPROM data
+            // Calcular el checksum sobre los datos leídos (excepto el último byte, que será el checksum almacenado)
+            uint8_t checksum = 0;
+            uint8_t i;
+            for (i = 0; i < LARGO_READ - 1; i++) {
+                checksum ^= datos_leidos[i];  // XOR de todos los datos leídos
+            }
+
+            if (1) { // checksum == datos_leidos[LARGO_READ - 1]
+            setpoint = datos_leidos[0];
+            histeresis = datos_leidos[1];
+            // datos_leidos[2] MSB de intMuestreo
+            // datos_leidos[3] LSB de intMuestreo
+            intMuestreo = (datos_leidos[2] << 8) | datos_leidos[3];
             temp_setTMuestreo(intMuestreo);
-            timeout = 1; // Salir del loop
+            }else{
+
+            }
         }
-    }
-
-    if (!UART_connection())
-    {
-        statusLed_setState(ERROR); // LED estado error
-
-        // Lectura de la EEPROM
-        EEPROM_readData(direccion, datos_leidos, LARGO_READ);
-        // Parse EEPROM data
-        // Calcular el checksum sobre los datos leídos (excepto el último byte, que será el checksum almacenado)
-        uint8_t checksum = 0;
-        uint8_t i;
-        for (i = 0; i < LARGO_READ - 1; i++) {
-            checksum ^= datos_leidos[i];  // XOR de todos los datos leídos
-        }
-
-        if (1) { // checksum == datos_leidos[LARGO_READ - 1]
-        setpoint = datos_leidos[0];
-        histeresis = datos_leidos[1];
-        // datos_leidos[2] MSB de intMuestreo
-        // datos_leidos[3] LSB de intMuestreo
-        intMuestreo = (datos_leidos[2] << 8) | datos_leidos[3];
-        temp_setTMuestreo(intMuestreo);
-        }else{
-
-        }
-    }
 }
 
 void AppRun(void)
