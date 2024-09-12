@@ -123,23 +123,7 @@ void AppInitLast(void)
             // Lectura de la EEPROM
             EEPROM_readData(direccion, datos_leidos, LARGO_READ);
             // Parse EEPROM data
-            // Calcular el checksum sobre los datos leídos (excepto el último byte, que será el checksum almacenado)
-            uint8_t checksum = 0;
-            uint8_t i;
-            for (i = 0; i < LARGO_READ - 1; i++) {
-                checksum ^= datos_leidos[i];  // XOR de todos los datos leídos
-            }
-
-            if (1) { // checksum == datos_leidos[LARGO_READ - 1]
-            setpoint = datos_leidos[0];
-            histeresis = datos_leidos[1];
-            // datos_leidos[2] MSB de intMuestreo
-            // datos_leidos[3] LSB de intMuestreo
-            intMuestreo = (datos_leidos[2] << 8) | datos_leidos[3];
-            temp_setTMuestreo(intMuestreo);
-            }else{
-
-            }
+            EEPROM_parseData(READ, datos_leidos, LARGO_READ, &setpoint, &histeresis, &intMuestreo);
         }
 }
 
@@ -194,19 +178,8 @@ void AppRun(void)
 
         if (!EEPROM_getWritingFlag())
         {
-            envio[0] = setpoint;
-            envio[1] = histeresis;
-            envio[2] = (intMuestreo >> 8) & 0xFF;
-            envio[3] = intMuestreo & 0xFF;
-            envio[4] = 0x00;
-
-            uint8_t checksum = 0;
-            // Calcular el checksum sobre los datos (del byte 0 al 4)
-            uint8_t i;
-            for (i = 0; i < (LARGO_READ - 1); i++) {
-                checksum ^= envio[i];  // XOR de los datos
-            }
-            envio[LARGO_READ - 1] = checksum; // Checksum en pos. 5
+            // Parse data to be written
+            EEPROM_parseData(WRITE, envio, LARGO_ENV, &setpoint, &histeresis, &intMuestreo);
             // Write data to EEPROM
             EEPROM_writeData(direccion, envio, LARGO_ENV);
         }

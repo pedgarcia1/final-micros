@@ -43,6 +43,10 @@
 /*******************************************************************************
  * ENUMERATIONS AND STRUCTURES AND TYPEDEFS
  ******************************************************************************/
+enum EEPROM_PARSE {
+  READ,
+  WRITE
+};
 
 /*******************************************************************************
  * VARIABLE PROTOTYPES WITH GLOBAL SCOPE
@@ -83,6 +87,16 @@ void EEPROM_readData(uint16_t address, uint8_t* data, uint8_t length);
  */
 uint8_t EEPROM_getWritingFlag(void);
 
+/**
+ * @brief Parse EEPROM data
+ * @param parse: READ or WRITE
+ * @param data: Data to be parsed
+ * @param length: Length of the data
+ * @param setpoint: Setpoint value
+ * @param histeresis: Histeresis value
+ * @param intMuestreo: Sample time value
+ */
+void EEPROM_parseData(enum EEPROM_PARSE parse, uint8_t *data, uint8_t length, uint8_t *setpoint, uint8_t *histeresis, uint16_t *intMuestreo);
 
 /*******************************************************************************
  ******************************************************************************/

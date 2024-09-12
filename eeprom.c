@@ -105,6 +105,52 @@ uint8_t EEPROM_getWritingFlag(void) {
     return EEPROM_writingFlag;
 }
 
+void EEPROM_parseData(enum EEPROM_PARSE parse, uint8_t *data, uint8_t length, uint8_t *setpoint, uint8_t *histeresis, uint16_t *intMuestreo)
+{
+    uint8_t checksum = 0;
+    uint8_t i;
+
+    switch (parse)
+    {
+    case READ:
+        for (i = 0; i < length - 1; i++)
+        {
+            checksum ^= data[i]; // XOR de todos los datos le�dos
+        }
+
+        if (checksum == data[length - 1])
+        {
+            *setpoint = data[0];
+            *histeresis = data[1];
+            // data[2] MSB de intMuestreo
+            // data[3] LSB de intMuestreo
+            *intMuestreo = (data[2] << 8) | data[3];
+            temp_setTMuestreo(intMuestreo);
+        }
+        else
+        {
+            // Error de checksum ??
+        }
+        break;
+    case WRITE:
+        data[0] = *setpoint;
+        data[1] = *histeresis;
+        data[2] = (*intMuestreo >> 8) & 0xFF;
+        data[3] = *intMuestreo & 0xFF;
+        data[4] = 0x00;
+        // Calcular el checksum sobre los datos (del byte 0 al 4)
+        uint8_t i;
+        for (i = 0; i < (length - 1); i++)
+        {
+            checksum ^= data[i]; // XOR de los datos
+        }
+        data[length - 1] = checksum; // Checksum en pos. 5
+        break;
+    default:
+        break;
+    }
+}
+
 /*******************************************************************************
  *******************************************************************************
                         LOCAL FUNCTION DEFINITIONS
