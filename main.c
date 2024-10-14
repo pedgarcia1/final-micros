@@ -88,8 +88,6 @@ void AppInit(void)
     PWM_Init();
     statusLed_init();
     EEPROM_init();
-    // temp_SetResolution(TEMP_9_BIT); NO FUNCIONA, BORRAR O PROBAR CON EL DS18B20
-
 
 }
 
@@ -191,10 +189,10 @@ void AppRun(void)
 
     if(temp_int > setpoint + histeresis){
         PWM_setDC(10);
-        calefactor = 0; // OFF
+        calefactor = OFF;
     }else if(temp_int < setpoint - histeresis){
         PWM_setDC(90);
-        calefactor = 1; // ON
+        calefactor = ON;
     }
 
 
