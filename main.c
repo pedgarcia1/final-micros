@@ -1,6 +1,6 @@
 /***************************************************************************//**
   @file     main.c
-  @brief    Archivo principal del TP8 ej. 1
+  @brief    Archivo principal del Tp Final
   @Author   Ignacion Quintana, Teo Nicoletti, Tristan Gonzalez Branca y Pedro Garcia Delucis
  ******************************************************************************/
 
@@ -131,7 +131,6 @@ void AppInitLast(void)
 
 void AppRun(void)
 {
-
     // Loop (se ejecuta constantemente en un ciclo infinito)
     uint8_t presence = 0;
     float TEMP = 0;
